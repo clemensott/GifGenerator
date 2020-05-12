@@ -1,0 +1,31 @@
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:52081/",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "FIREBASE_REALTIME_TOKEN": "AUTH",
+        "FIREBASE_REALTIME_URL": "https://<project-name>.firebaseio.com/",
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "GifGenerator": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "FIREBASE_REALTIME_TOKEN": "AUTH",
+        "FIREBASE_REALTIME_URL": "https://<project-name>.firebaseio.com/",
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://localhost:52082/"
+    }
+  }
+}

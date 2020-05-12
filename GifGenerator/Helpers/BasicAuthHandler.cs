@@ -2,8 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
@@ -17,20 +15,18 @@ namespace GifGenerator.Helpers
         {
         }
 
-        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            return new ValueTask<AuthenticateResult>(HandleAuth()).AsTask();
-        }
+            if (!Request.TryGetToken(out string token))
+            {
+                return AuthenticateResult.NoResult();
+            }
 
-        private AuthenticateResult HandleAuth()
-        {
-            //if (Request.Headers.ContainsKey("password"))
-            //{
-            //    if (Request.Headers["password"] != "secure") return AuthenticateResult.Fail("Wrong password in header");
-            //}
-            //else return AuthenticateResult.Fail("Password is missing");
+            string username = await FbHelper.Client.GetLoginUsername(token);
 
-            Claim[] claims = new[] { new Claim(ClaimTypes.Name, "Admin") };
+            if (username == null) return AuthenticateResult.Fail("Invalid auth token");
+
+            Claim[] claims = new[] { new Claim(ClaimTypes.NameIdentifier, username) };
             ClaimsIdentity identity = new ClaimsIdentity(claims, Scheme.Name);
             ClaimsPrincipal principal = new ClaimsPrincipal(identity);
             AuthenticationTicket ticket = new AuthenticationTicket(principal, Scheme.Name);
