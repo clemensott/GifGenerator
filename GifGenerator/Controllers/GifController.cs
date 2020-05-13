@@ -27,8 +27,8 @@ namespace GifGenerator.Controllers
         [HttpGet("{gifId}/meta")]
         public async Task<ActionResult<Gif>> GetMeta(string gifId)
         {
-            Gif meta = await FbHelper.Client.GetGifAsync(gifId);
-            bool hasCategory = await FbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), meta.CategoryId);
+            Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
+            bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), meta.CategoryId);
 
             if (hasCategory) return meta;
 
@@ -38,12 +38,12 @@ namespace GifGenerator.Controllers
         [HttpPut("{gifId}/customtag")]
         public async Task<ActionResult> SetCustomTag(string gifId, [FromBody] string newCustomTag)
         {
-            Gif meta = await FbHelper.Client.GetGifAsync(gifId);
-            bool hasCategory = await FbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), meta.CategoryId);
+            Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
+            bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), meta.CategoryId);
             if (!hasCategory) return NotFound();
 
-            if (string.IsNullOrWhiteSpace(newCustomTag)) await FbHelper.Client.GifCustomTagQuery(gifId).DeleteAsync();
-            else await FbHelper.Client.GifCustomTagQuery(gifId).PutAsync<string>(newCustomTag);
+            if (string.IsNullOrWhiteSpace(newCustomTag)) await FbDbHelper.Client.GifCustomTagQuery(gifId).DeleteAsync();
+            else await FbDbHelper.Client.GifCustomTagQuery(gifId).PutAsync<string>(newCustomTag);
 
             return Ok();
         }
@@ -63,19 +63,19 @@ namespace GifGenerator.Controllers
 
         public async Task<ActionResult> MoveGif(string gifId, string destCategoryId, string username, bool checkDestCategoryId)
         {
-            Gif meta = await FbHelper.Client.GetGifAsync(gifId);
-            bool hasSrcCategory = await FbHelper.Client.UserContainsCategoryAsync(username, meta.CategoryId);
+            Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
+            bool hasSrcCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, meta.CategoryId);
             if (!hasSrcCategory) return NotFound();
 
             if (checkDestCategoryId)
             {
-                bool hasDestCategory = await FbHelper.Client.UserContainsCategoryAsync(username, destCategoryId);
+                bool hasDestCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, destCategoryId);
                 if (!hasDestCategory) return NotFound();
             }
 
-            await FbHelper.Client.CategoryGifQuery(meta.CategoryId, gifId).DeleteAsync();
-            await FbHelper.Client.GifCategroyQuery(gifId).PutAsync<string>(destCategoryId);
-            await FbHelper.Client.CategoryGifQuery(destCategoryId, gifId).PutAsync();
+            await FbDbHelper.Client.CategoryGifQuery(meta.CategoryId, gifId).DeleteAsync();
+            await FbDbHelper.Client.GifCategroyQuery(gifId).PutAsync<string>(destCategoryId);
+            await FbDbHelper.Client.CategoryGifQuery(destCategoryId, gifId).PutAsync();
 
             return Ok();
         }
@@ -83,13 +83,13 @@ namespace GifGenerator.Controllers
         [HttpDelete("{gifId}")]
         public async Task<ActionResult> DeleteGif(string gifId)
         {
-            Gif meta = await FbHelper.Client.GetGifAsync(gifId);
-            bool hasCategory = await FbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), meta.CategoryId);
+            Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
+            bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), meta.CategoryId);
 
             if (!hasCategory) return NotFound();
 
-            await FbHelper.Client.DeleteCategoryChildAsync(meta.CategoryId, gifId);
-            await FbHelper.Client.GifQuery(gifId).DeleteAsync();
+            await FbDbHelper.Client.DeleteCategoryChildAsync(meta.CategoryId, gifId);
+            await FbDbHelper.Client.GifQuery(gifId).DeleteAsync();
 
             return Ok();
         }

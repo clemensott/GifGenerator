@@ -32,12 +32,12 @@ namespace GifGenerator.Controllers
         {
             if (!string.IsNullOrWhiteSpace(username))
             {
-                bool hasCategory = await FbHelper.Client.UserContainsCategoryAsync(username, categoryId);
+                bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, categoryId);
 
                 if (!hasCategory) return NotFound();
             }
 
-            Category category = await FbHelper.Client.GetCategoryAsync(categoryId);
+            Category category = await FbDbHelper.Client.GetCategoryAsync(categoryId);
 
             return category ?? new Category();
         }
@@ -62,7 +62,7 @@ namespace GifGenerator.Controllers
         {
             if (checkParentId)
             {
-                bool hasParentId = await FbHelper.Client.UserContainsCategoryAsync(username, parentId);
+                bool hasParentId = await FbDbHelper.Client.UserContainsCategoryAsync(username, parentId);
                 if (!hasParentId) return NotFound();
             }
 
@@ -72,11 +72,11 @@ namespace GifGenerator.Controllers
                 ParentId = parentId,
             };
 
-            FirebaseObject<Category> addedCategory = await FbHelper.Client.CategoriesQuery().PostAsync(category);
+            FirebaseObject<Category> addedCategory = await FbDbHelper.Client.CategoriesQuery().PostAsync(category);
             string categoryId = addedCategory.Key;
 
-            await FbHelper.Client.PutCategoryChildAsync(parentId, categoryId);
-            await FbHelper.Client.UserCategoryQuery(username, categoryId).PutAsync();
+            await FbDbHelper.Client.PutCategoryChildAsync(parentId, categoryId);
+            await FbDbHelper.Client.UserCategoryQuery(username, categoryId).PutAsync();
 
             return categoryId;
         }
@@ -85,11 +85,11 @@ namespace GifGenerator.Controllers
         [Authorize]
         public async Task<ActionResult<Category>> RenameCategory(string categoryId, [FromBody] string name)
         {
-            bool hasCategory = await FbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), categoryId);
+            bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), categoryId);
 
             if (!hasCategory) return NotFound();
 
-            await FbHelper.Client.CategoryNameQuery(categoryId).PutAsync<string>(name);
+            await FbDbHelper.Client.CategoryNameQuery(categoryId).PutAsync<string>(name);
 
             return await GetCategory(categoryId);
         }
@@ -112,22 +112,22 @@ namespace GifGenerator.Controllers
         {
             if (srcCategoryId == destCategoryId) return BadRequest();
 
-            if (!await FbHelper.Client.UserContainsCategoryAsync(username, srcCategoryId) ||
-                (checkDestCategory && !await FbHelper.Client.UserContainsCategoryAsync(username, destCategoryId))) return NotFound();
+            if (!await FbDbHelper.Client.UserContainsCategoryAsync(username, srcCategoryId) ||
+                (checkDestCategory && !await FbDbHelper.Client.UserContainsCategoryAsync(username, destCategoryId))) return NotFound();
 
-            string srcCategoryParentId = await FbHelper.Client.GetCategoryParentIdAsync(srcCategoryId);
-            await FbHelper.Client.PutCategoryChildAsync(destCategoryId, srcCategoryId);
-            await FbHelper.Client.CategoryParentQuery(srcCategoryId).PutAsync<string>(destCategoryId);
-            await FbHelper.Client.DeleteCategoryChildAsync(srcCategoryParentId, srcCategoryId);
+            string srcCategoryParentId = await FbDbHelper.Client.GetCategoryParentIdAsync(srcCategoryId);
+            await FbDbHelper.Client.PutCategoryChildAsync(destCategoryId, srcCategoryId);
+            await FbDbHelper.Client.CategoryParentQuery(srcCategoryId).PutAsync<string>(destCategoryId);
+            await FbDbHelper.Client.DeleteCategoryChildAsync(srcCategoryParentId, srcCategoryId);
 
-            return await FbHelper.Client.GetCategoryAsync(srcCategoryId);
+            return await FbDbHelper.Client.GetCategoryAsync(srcCategoryId);
         }
 
         [HttpDelete("{categoryId}")]
         public async Task<ActionResult> RemoveCategroy(string categoryId)
         {
             string username = User.GetUsername();
-            bool hasCategory = await FbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), categoryId);
+            bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), categoryId);
 
             if (!hasCategory) return NotFound();
 
@@ -137,11 +137,11 @@ namespace GifGenerator.Controllers
             while (deleteCategoryIds.Count > 0)
             {
                 string deleteCategoryId = deleteCategoryIds.Dequeue();
-                Category category = await FbHelper.Client.GetCategoryAsync(deleteCategoryId);
+                Category category = await FbDbHelper.Client.GetCategoryAsync(deleteCategoryId);
 
                 foreach (string gifId in category?.GifIds?.Keys.ToNotNull())
                 {
-                    await FbHelper.Client.GifQuery(gifId).DeleteAsync();
+                    await FbDbHelper.Client.GifQuery(gifId).DeleteAsync();
                 }
 
                 foreach (string childId in category?.ChildrenIds?.Keys.ToNotNull())
@@ -149,14 +149,14 @@ namespace GifGenerator.Controllers
                     deleteCategoryIds.Enqueue(childId);
                 }
 
-                await FbHelper.Client.UserCategoryQuery(username, categoryId).DeleteAsync();
+                await FbDbHelper.Client.UserCategoryQuery(username, categoryId).DeleteAsync();
 
                 if (deleteCategoryId == categoryId)
                 {
-                    await FbHelper.Client.DeleteCategoryChildAsync(category.ParentId, deleteCategoryId);
+                    await FbDbHelper.Client.DeleteCategoryChildAsync(category.ParentId, deleteCategoryId);
                 }
 
-                await FbHelper.Client.CategoryQuery(categoryId).DeleteAsync();
+                await FbDbHelper.Client.CategoryQuery(categoryId).DeleteAsync();
             }
 
             return Ok();

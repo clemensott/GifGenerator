@@ -8,7 +8,10 @@ using System.Threading.Tasks;
 
 namespace GifGenerator.Helpers
 {
-    public static class FbHelper
+    /// <summary>
+    /// Firebase Realtime Database Helper: Provides a FirebaseClient and extension methods to perform commen requests.
+    /// </summary>
+    public static class FbDbHelper
     {
         private const string LoginBaseChild = "Login";
 
@@ -191,9 +194,9 @@ namespace GifGenerator.Helpers
             return client.GifQuery(gifId).Child(nameof(Gif.CategoryId));
         }
 
-        public static Task PutGifCustomTag(this FirebaseClient client , string gifId, string customTag)
+        public static ChildQuery GifCustomTagQuery(this FirebaseClient client , string gifId)
         {
-            return client.GifQuery(gifId).Child(nameof(Gif.CustomTag)).PutAsync<string>(customTag);
+            return client.GifQuery(gifId).Child(nameof(Gif.CustomTag));
         }
     }
 }

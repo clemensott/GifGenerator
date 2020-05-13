@@ -22,7 +22,7 @@ namespace GifGenerator.Helpers
                 return AuthenticateResult.NoResult();
             }
 
-            string username = await FbHelper.Client.GetLoginUsernameAsync(token);
+            string username = await FbDbHelper.Client.GetLoginUsernameAsync(token);
 
             if (username == null) return AuthenticateResult.Fail("Invalid auth token");
 

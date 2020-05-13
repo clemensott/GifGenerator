@@ -17,11 +17,11 @@ namespace GifGenerator.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> LoginUser([FromBody] LoginBody body)
         {
-            string password = await FbHelper.Client.GetUserPasswordAsync(body.Username);
+            string password = await FbDbHelper.Client.GetUserPasswordAsync(body.Username);
 
             if (password == null || password != body.Password) return BadRequest();
 
-            string token = await FbHelper.Client.LoginAsync(body.Username);
+            string token = await FbDbHelper.Client.LoginAsync(body.Username);
 
             Response.Cookies.Append(UserHelper.CookieName, token, new CookieOptions()
             {
@@ -39,7 +39,7 @@ namespace GifGenerator.Controllers
         {
             string token = Request.GetToken();
 
-            await FbHelper.Client.LogoutAsync(token);
+            await FbDbHelper.Client.LogoutAsync(token);
 
             Response.Cookies.Delete(UserHelper.CookieName);
             return Ok();

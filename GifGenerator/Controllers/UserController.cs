@@ -20,7 +20,7 @@ namespace GifGenerator.Controllers
             if (!UserHelper.IsValidUsername(body.Username) ||
                 !UserHelper.IsPasswordValid(body.Password)) return ValidationProblem();
 
-            bool containsUser = await FbHelper.Client.UserQuery(body.Username).ContainsKeyAsync();
+            bool containsUser = await FbDbHelper.Client.UserQuery(body.Username).ContainsKeyAsync();
 
             if (containsUser) return BadRequest();
 
@@ -29,7 +29,7 @@ namespace GifGenerator.Controllers
                 Username = body.Username,
                 Password = body.Password,
             };
-            await FbHelper.Client.UserQuery(body.Username).PutAsync(user);
+            await FbDbHelper.Client.UserQuery(body.Username).PutAsync(user);
 
             return Ok();
         }
@@ -42,7 +42,7 @@ namespace GifGenerator.Controllers
 
             string username = User.GetUsername();
 
-            await FbHelper.Client.UserPasswordQuery(username).PutAsync(body.NewPassword);
+            await FbDbHelper.Client.UserPasswordQuery(username).PutAsync(body.NewPassword);
 
             return Ok();
         }
@@ -53,27 +53,27 @@ namespace GifGenerator.Controllers
         {
             string token = Request.GetToken();
             string username = User.GetUsername();
-            User user = await FbHelper.Client.GetUserAsync(username);
+            User user = await FbDbHelper.Client.GetUserAsync(username);
 
             foreach (string categoryId in user.AllCategoryIds?.Keys.ToNotNull().Concat(new[] { username }))
             {
-                Category category = await FbHelper.Client.GetCategoryAsync(categoryId);
+                Category category = await FbDbHelper.Client.GetCategoryAsync(categoryId);
 
                 foreach (string gifId in category?.GifIds?.Keys.ToNotNull())
                 {
-                    await FbHelper.Client.CategoryGifQuery(categoryId, gifId).DeleteAsync();
+                    await FbDbHelper.Client.CategoryGifQuery(categoryId, gifId).DeleteAsync();
                 }
 
-                await FbHelper.Client.CategoryQuery(categoryId).DeleteAsync();
+                await FbDbHelper.Client.CategoryQuery(categoryId).DeleteAsync();
             }
 
-            await FbHelper.Client.LogoutAsync(token);
-            await FbHelper.Client.UserQuery(username).DeleteAsync();
+            await FbDbHelper.Client.LogoutAsync(token);
+            await FbDbHelper.Client.UserQuery(username).DeleteAsync();
 
-            Logins allLogins = await FbHelper.Client.GetLoginsAsync();
+            Logins allLogins = await FbDbHelper.Client.GetLoginsAsync();
             foreach (KeyValuePair<string, string> pair in allLogins.Where(p => p.Value == username))
             {
-                await FbHelper.Client.LoginQuery(pair.Key).DeleteAsync();
+                await FbDbHelper.Client.LoginQuery(pair.Key).DeleteAsync();
             }
 
             return Ok();
