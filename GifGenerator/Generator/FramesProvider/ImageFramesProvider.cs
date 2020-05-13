@@ -11,10 +11,17 @@ namespace GifGenerator.Generator.FramesProvider
         {
             Image src = Image.Load(stream);
 
-            if (src.Frames.Count == 0) return new Image[] { src };
+            if (src.Frames.Count == 1) return new Image[] { src };
 
-            IEnumerable<Image> frames = src.Frames.Select((f, i) => src.Frames.CloneFrame(i));
-            return FilterFrames(frames, begin, count, step);
+            try
+            {
+                IEnumerable<Image> frames = src.Frames.Select((f, i) => src.Frames.CloneFrame(i));
+                return FilterFrames(frames, begin, count, step).ToArray();
+            }
+            finally
+            {
+                src.Dispose();
+            }
         }
     }
 }

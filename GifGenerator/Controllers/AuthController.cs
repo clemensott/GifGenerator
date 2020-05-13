@@ -27,7 +27,7 @@ namespace GifGenerator.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                MaxAge = body.KeepLogedIn ? (TimeSpan?)null : maxCookieAge
+                MaxAge = body.KeepLoggedIn ? (TimeSpan?)null : maxCookieAge
             });
 
             return token;

@@ -1,4 +1,6 @@
-﻿using SixLabors.ImageSharp;
+﻿using GifGenerator.Models.Gifs;
+using SixLabors.ImageSharp;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,6 +21,23 @@ namespace GifGenerator.Generator.FramesProvider
 
                 index++;
             }
+        }
+
+        public static BaseFramesProvider GetFramesProvider(GifSourceType type)
+        {
+            switch (type)
+            {
+                case GifSourceType.GIF:
+                case GifSourceType.JPEG:
+                case GifSourceType.PNG:
+                case GifSourceType.BMP:
+                    return new ImageFramesProvider();
+
+                case GifSourceType.MP4:
+                    return new VideoFramesProvider();
+            }
+
+            throw new ArgumentException("Type is not supported: " + type, nameof(type));
         }
     }
 }

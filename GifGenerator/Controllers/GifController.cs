@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database.Query;
+using GifGenerator.Generator;
 using GifGenerator.Helpers;
 using GifGenerator.Models.Gifs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Gif;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace GifGenerator.Controllers
 {
@@ -17,10 +21,13 @@ namespace GifGenerator.Controllers
     public class GifController : ControllerBase
     {
         [HttpPost("create")]
-        [Authorize]
-        public ActionResult CreateGif([FromBody] GifCreateBody body)
+        public async Task CreateGif([FromBody] GifCreateBody body)
         {
-            return Ok();
+            using (Image gif = await GifsGenerator.Create(body))
+            {
+                Response.ContentType = "image/gif";
+                gif.SaveAsGif(Response.Body);
+            }
         }
 
         [HttpGet("{gifId}/meta")]

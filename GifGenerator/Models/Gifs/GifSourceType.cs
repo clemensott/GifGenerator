@@ -2,10 +2,10 @@
 {
     public enum GifSourceType
     {
-        GIF,
         JPEG,
         PNG,
         BMP,
+        GIF,
         MP4,
     }
 }
