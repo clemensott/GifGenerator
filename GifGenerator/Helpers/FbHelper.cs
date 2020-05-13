@@ -33,10 +33,15 @@ namespace GifGenerator.Helpers
             }
         }
 
-        public static async Task<bool> ContainsKey(this FirebaseQuery query)
+        public static async Task<bool> ContainsKeyAsync(this FirebaseQuery query)
         {
             object obj = await query.OnceSingleAsync<object>();
             return obj != null;
+        }
+
+        public static Task PutAsync(this FirebaseQuery query)
+        {
+            return query.PutAsync(true);
         }
 
         public static ChildQuery UserQuery(this FirebaseClient client, string username)
@@ -44,7 +49,7 @@ namespace GifGenerator.Helpers
             return client.Child(nameof(User)).Child(username);
         }
 
-        public static Task<User> GetUser(this FirebaseClient client, string username)
+        public static Task<User> GetUserAsync(this FirebaseClient client, string username)
         {
             return client.UserQuery(username).OnceSingleAsync<User>();
         }
@@ -54,7 +59,7 @@ namespace GifGenerator.Helpers
             return client.Child(nameof(User)).Child(username).Child(nameof(User.Password));
         }
 
-        public static Task<string> GetUserPassword(this FirebaseClient client, string username)
+        public static Task<string> GetUserPasswordAsync(this FirebaseClient client, string username)
         {
             return client.UserPasswordQuery(username).OnceSingleAsync<string>();
         }
@@ -69,9 +74,9 @@ namespace GifGenerator.Helpers
             return client.UserAllCategoriesQuery(username).Child(categoryId);
         }
 
-        public static Task<bool> UserContainsCategory(this FirebaseClient client, string username, string categoryId)
+        public static Task<bool> UserContainsCategoryAsync(this FirebaseClient client, string username, string categoryId)
         {
-            return client.UserCategoryQuery(username, categoryId).ContainsKey();
+            return client.UserCategoryQuery(username, categoryId).ContainsKeyAsync();
         }
 
         public static ChildQuery LoginsQuery(this FirebaseClient client)
@@ -79,7 +84,7 @@ namespace GifGenerator.Helpers
             return client.Child(LoginBaseChild);
         }
 
-        public static Task<Logins> GetLogins(this FirebaseClient client)
+        public static Task<Logins> GetLoginsAsync(this FirebaseClient client)
         {
             return client.LoginsQuery().OnceSingleAsync<Logins>();
         }
@@ -89,18 +94,18 @@ namespace GifGenerator.Helpers
             return client.Child(LoginBaseChild).Child(token);
         }
 
-        public static Task<string> GetLoginUsername(this FirebaseClient client, string token)
+        public static Task<string> GetLoginUsernameAsync(this FirebaseClient client, string token)
         {
             return client.LoginQuery(token).OnceSingleAsync<string>();
         }
 
-        public static async Task<string> Login(this FirebaseClient client, string username)
+        public static async Task<string> LoginAsync(this FirebaseClient client, string username)
         {
             FirebaseObject<string> login = await client.LoginsQuery().PostAsync<string>(username);
             return login.Key;
         }
 
-        public static Task Logout(this FirebaseClient client, string token)
+        public static Task LogoutAsync(this FirebaseClient client, string token)
         {
             return client.LoginQuery(token).DeleteAsync();
         }
@@ -115,7 +120,7 @@ namespace GifGenerator.Helpers
             return client.CategoriesQuery().Child(id);
         }
 
-        public static Task<Category> GetCategory(this FirebaseClient client, string id)
+        public static Task<Category> GetCategoryAsync(this FirebaseClient client, string id)
         {
             return client.CategoryQuery(id).OnceSingleAsync<Category>();
         }
@@ -125,10 +130,19 @@ namespace GifGenerator.Helpers
             return client.CategoryQuery(id).Child(nameof(Category.Name));
         }
 
-
         public static ChildQuery CategoryChildQuery(this FirebaseClient client, string categoryId, string childId)
         {
             return client.CategoryQuery(categoryId).Child(nameof(Category.ChildrenIds)).Child(childId);
+        }
+
+        public static Task PutCategoryChildAsync(this FirebaseClient client, string categoryId, string childId)
+        {
+            return client.CategoryChildQuery(categoryId, childId).PutAsync();
+        }
+
+        public static Task DeleteCategoryChildAsync(this FirebaseClient client, string categoryId, string childId)
+        {
+            return client.CategoryChildQuery(categoryId, childId).DeleteAsync();
         }
 
         public static ChildQuery CategoryParentQuery(this FirebaseClient client, string id)
@@ -136,7 +150,7 @@ namespace GifGenerator.Helpers
             return client.CategoryQuery(id).Child(nameof(Category.ParentId));
         }
 
-        public static Task<string> GetCategoryParentId(this FirebaseClient client, string categoryId)
+        public static Task<string> GetCategoryParentIdAsync(this FirebaseClient client, string categoryId)
         {
             return client.CategoryParentQuery(categoryId).OnceSingleAsync<string>();
         }
@@ -156,7 +170,7 @@ namespace GifGenerator.Helpers
             return client.Child(nameof(Gif));
         }
 
-        public static async Task<string> AddGif(this FirebaseClient client, Gif gif)
+        public static async Task<string> AddGifAsync(this FirebaseClient client, Gif gif)
         {
             FirebaseObject<Gif> item = await client.GifsQuery().PostAsync(gif);
             return item.Key;
@@ -167,9 +181,19 @@ namespace GifGenerator.Helpers
             return client.GifsQuery().Child(gifId);
         }
 
-        public static Task<Gif> GetGif(this FirebaseClient client, string gifId)
+        public static Task<Gif> GetGifAsync(this FirebaseClient client, string gifId)
         {
             return client.GifQuery(gifId).OnceSingleAsync<Gif>();
+        }
+
+        public static ChildQuery GifCategroyQuery(this FirebaseClient client, string gifId)
+        {
+            return client.GifQuery(gifId).Child(nameof(Gif.CategoryId));
+        }
+
+        public static Task PutGifCustomTag(this FirebaseClient client , string gifId, string customTag)
+        {
+            return client.GifQuery(gifId).Child(nameof(Gif.CustomTag)).PutAsync<string>(customTag);
         }
     }
 }

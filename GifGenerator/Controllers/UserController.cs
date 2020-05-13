@@ -20,7 +20,7 @@ namespace GifGenerator.Controllers
             if (!UserHelper.IsValidUsername(body.Username) ||
                 !UserHelper.IsPasswordValid(body.Password)) return ValidationProblem();
 
-            bool containsUser = await FbHelper.Client.UserQuery(body.Username).ContainsKey();
+            bool containsUser = await FbHelper.Client.UserQuery(body.Username).ContainsKeyAsync();
 
             if (containsUser) return BadRequest();
 
@@ -53,11 +53,11 @@ namespace GifGenerator.Controllers
         {
             string token = Request.GetToken();
             string username = User.GetUsername();
-            User user = await FbHelper.Client.GetUser(username);
+            User user = await FbHelper.Client.GetUserAsync(username);
 
             foreach (string categoryId in user.AllCategoryIds?.Keys.ToNotNull().Concat(new[] { username }))
             {
-                Category category = await FbHelper.Client.GetCategory(categoryId);
+                Category category = await FbHelper.Client.GetCategoryAsync(categoryId);
 
                 foreach (string gifId in category?.GifIds?.Keys.ToNotNull())
                 {
@@ -67,10 +67,10 @@ namespace GifGenerator.Controllers
                 await FbHelper.Client.CategoryQuery(categoryId).DeleteAsync();
             }
 
-            await FbHelper.Client.Logout(token);
+            await FbHelper.Client.LogoutAsync(token);
             await FbHelper.Client.UserQuery(username).DeleteAsync();
 
-            Logins allLogins = await FbHelper.Client.GetLogins();
+            Logins allLogins = await FbHelper.Client.GetLoginsAsync();
             foreach (KeyValuePair<string, string> pair in allLogins.Where(p => p.Value == username))
             {
                 await FbHelper.Client.LoginQuery(pair.Key).DeleteAsync();

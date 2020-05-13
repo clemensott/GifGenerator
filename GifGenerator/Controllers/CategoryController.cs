@@ -32,12 +32,12 @@ namespace GifGenerator.Controllers
         {
             if (!string.IsNullOrWhiteSpace(username))
             {
-                bool hasCategory = await FbHelper.Client.UserContainsCategory(username, categoryId);
+                bool hasCategory = await FbHelper.Client.UserContainsCategoryAsync(username, categoryId);
 
                 if (!hasCategory) return NotFound();
             }
 
-            Category category = await FbHelper.Client.GetCategory(categoryId);
+            Category category = await FbHelper.Client.GetCategoryAsync(categoryId);
 
             return category ?? new Category();
         }
@@ -62,7 +62,7 @@ namespace GifGenerator.Controllers
         {
             if (checkParentId)
             {
-                bool hasParentId = await FbHelper.Client.UserContainsCategory(username, parentId);
+                bool hasParentId = await FbHelper.Client.UserContainsCategoryAsync(username, parentId);
                 if (!hasParentId) return NotFound();
             }
 
@@ -75,8 +75,8 @@ namespace GifGenerator.Controllers
             FirebaseObject<Category> addedCategory = await FbHelper.Client.CategoriesQuery().PostAsync(category);
             string categoryId = addedCategory.Key;
 
-            await FbHelper.Client.CategoryChildQuery(parentId, categoryId).PutAsync(true);
-            await FbHelper.Client.UserCategoryQuery(username, categoryId).PutAsync(true);
+            await FbHelper.Client.PutCategoryChildAsync(parentId, categoryId);
+            await FbHelper.Client.UserCategoryQuery(username, categoryId).PutAsync();
 
             return categoryId;
         }
@@ -85,7 +85,7 @@ namespace GifGenerator.Controllers
         [Authorize]
         public async Task<ActionResult<Category>> RenameCategory(string categoryId, [FromBody] string name)
         {
-            bool hasCategory = await FbHelper.Client.UserContainsCategory(User.GetUsername(), categoryId);
+            bool hasCategory = await FbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), categoryId);
 
             if (!hasCategory) return NotFound();
 
@@ -112,22 +112,22 @@ namespace GifGenerator.Controllers
         {
             if (srcCategoryId == destCategoryId) return BadRequest();
 
-            if (!await FbHelper.Client.UserContainsCategory(username, srcCategoryId) ||
-                (checkDestCategory && !await FbHelper.Client.UserContainsCategory(username, destCategoryId))) return NotFound();
+            if (!await FbHelper.Client.UserContainsCategoryAsync(username, srcCategoryId) ||
+                (checkDestCategory && !await FbHelper.Client.UserContainsCategoryAsync(username, destCategoryId))) return NotFound();
 
-            string srcCategoryParentId = await FbHelper.Client.GetCategoryParentId(srcCategoryId);
-            await FbHelper.Client.CategoryChildQuery(destCategoryId, srcCategoryId).PutAsync(true);
+            string srcCategoryParentId = await FbHelper.Client.GetCategoryParentIdAsync(srcCategoryId);
+            await FbHelper.Client.PutCategoryChildAsync(destCategoryId, srcCategoryId);
             await FbHelper.Client.CategoryParentQuery(srcCategoryId).PutAsync<string>(destCategoryId);
-            await FbHelper.Client.CategoryChildQuery(srcCategoryParentId, srcCategoryId).DeleteAsync();
+            await FbHelper.Client.DeleteCategoryChildAsync(srcCategoryParentId, srcCategoryId);
 
-            return await FbHelper.Client.GetCategory(srcCategoryId);
+            return await FbHelper.Client.GetCategoryAsync(srcCategoryId);
         }
 
         [HttpDelete("{categoryId}")]
         public async Task<ActionResult> RemoveCategroy(string categoryId)
         {
             string username = User.GetUsername();
-            bool hasCategory = await FbHelper.Client.UserContainsCategory(User.GetUsername(), categoryId);
+            bool hasCategory = await FbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), categoryId);
 
             if (!hasCategory) return NotFound();
 
@@ -137,7 +137,7 @@ namespace GifGenerator.Controllers
             while (deleteCategoryIds.Count > 0)
             {
                 string deleteCategoryId = deleteCategoryIds.Dequeue();
-                Category category = await FbHelper.Client.GetCategory(deleteCategoryId);
+                Category category = await FbHelper.Client.GetCategoryAsync(deleteCategoryId);
 
                 foreach (string gifId in category?.GifIds?.Keys.ToNotNull())
                 {
@@ -153,7 +153,7 @@ namespace GifGenerator.Controllers
 
                 if (deleteCategoryId == categoryId)
                 {
-                    await FbHelper.Client.CategoryChildQuery(category.ParentId, deleteCategoryId).DeleteAsync();
+                    await FbHelper.Client.DeleteCategoryChildAsync(category.ParentId, deleteCategoryId);
                 }
 
                 await FbHelper.Client.CategoryQuery(categoryId).DeleteAsync();
