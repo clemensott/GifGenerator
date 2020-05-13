@@ -12,6 +12,10 @@
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
+        "FIREBASE_API_KEY": "KEY",
+        "FIREBASE_AUTH_EMAIL": "name@domain.com",
+        "FIREBASE_AUTH_PASSWORD": "PASSWORD",
+        "FIREBASE_BUCKET_URL": "<project-name>.appspot.com/",
         "FIREBASE_REALTIME_TOKEN": "AUTH",
         "FIREBASE_REALTIME_URL": "https://<project-name>.firebaseio.com/",
         "ASPNETCORE_ENVIRONMENT": "Development"
@@ -21,6 +25,10 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
+        "FIREBASE_API_KEY": "KEY",
+        "FIREBASE_AUTH_EMAIL": "name@domain.com",
+        "FIREBASE_AUTH_PASSWORD": "PASSWORD",
+        "FIREBASE_BUCKET_URL": "<project-name>.appspot.com/",
         "FIREBASE_REALTIME_TOKEN": "AUTH",
         "FIREBASE_REALTIME_URL": "https://<project-name>.firebaseio.com/",
         "ASPNETCORE_ENVIRONMENT": "Development"
