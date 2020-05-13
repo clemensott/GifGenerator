@@ -19,11 +19,18 @@ namespace GifGenerator.Models.Gifs
         /// <summary>
         /// The index of the begin frame. If not given it will be the first frame
         /// </summary>
-        public int Begin { get; set; } = 0;
+        public uint Begin { get; set; } = 0;
 
         /// <summary>
         /// The count of frame that will be taken. If not given all remaining frames will be taken
         /// </summary>
-        public int Count { get; set; } = int.MaxValue;
+        [Range(1, uint.MaxValue)]
+        public uint Count { get; set; } = int.MaxValue;
+
+        /// <summary>
+        /// The step size, which can be used to skip frames from the data
+        /// </summary>
+        [Range(1, uint.MaxValue)]
+        public uint Step { get; set; } = 1;
     }
 }
