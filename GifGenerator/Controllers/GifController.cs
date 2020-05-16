@@ -1,5 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Firebase.Database;
 using Firebase.Database.Query;
 using GifGenerator.Generator;
 using GifGenerator.Helpers;
@@ -57,6 +61,7 @@ namespace GifGenerator.Controllers
         }
 
         [HttpPost("create")]
+        [AllowAnonymous]
         public async Task CreateGif([FromBody] GifCreateBody body)
         {
             using (Image gif = await GifsGenerator.Create(body))
@@ -80,9 +85,10 @@ namespace GifGenerator.Controllers
             return CreateAdd(body, categoryId, username, true);
         }
 
-        public async Task<ActionResult<string>> CreateAdd(GifCreateBody body, string categoryId, string username, bool checkCategoryId)
+        public async Task<ActionResult<string>> CreateAdd(GifCreateBody body,
+            string categoryId, string username, bool checkCategoryId)
         {
-            string gifId, gifUrl;
+            string gifId;
 
             if (checkCategoryId)
             {
@@ -92,8 +98,17 @@ namespace GifGenerator.Controllers
 
             using (Image gif = await GifsGenerator.Create(body))
             {
-                gifId = await FbDbHelper.Client.AddGifAsync(new Gif() { CategoryId = categoryId, });
-                gifUrl = await FbSgHelper.Client.PutGifAsync(gifId, gif.SaveInMemoryStreamAsGif());
+                using (Stream stream = gif.SaveInMemoryStreamAsGif())
+                {
+                    Gif meta = new Gif()
+                    {
+                        CategoryId = categoryId,
+                        PixelSize = gif.Size(),
+                        FileSize = stream.Length
+                    };
+                    gifId = await FbDbHelper.Client.AddGifAsync(meta);
+                    await FbSgHelper.Client.PutGifAsync(gifId, stream);
+                }
             }
 
             await FbDbHelper.Client.CategoryGifQuery(categoryId, gifId).PutAsync();
@@ -102,7 +117,7 @@ namespace GifGenerator.Controllers
         }
 
         [HttpGet("{gifId}/meta")]
-        public async Task<ActionResult<Gif>> GetMeta(string gifId)
+        public async Task<ActionResult<GifInfo>> GetMeta(string gifId)
         {
             Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
             if (meta == null) return NotFound();
@@ -115,7 +130,7 @@ namespace GifGenerator.Controllers
                 if (!hasCategory) return NotFound();
             }
 
-            return meta;
+            return new GifInfo(gifId, meta);
         }
 
         [HttpPut("{gifId}/customtag")]
@@ -146,7 +161,8 @@ namespace GifGenerator.Controllers
             return MoveGif(gifId, destCategoryId, User.GetUsername(), true);
         }
 
-        public async Task<ActionResult> MoveGif(string gifId, string destCategoryId, string username, bool checkDestCategoryId)
+        public async Task<ActionResult> MoveGif(string gifId,
+            string destCategoryId, string username, bool checkDestCategoryId)
         {
             Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
             bool hasSrcCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, meta.CategoryId);
