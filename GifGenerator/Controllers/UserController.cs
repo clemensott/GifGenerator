@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database.Query;
 using GifGenerator.Helpers;
-using GifGenerator.Models;
+using GifGenerator.Models.Categories;
 using GifGenerator.Models.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +14,13 @@ namespace GifGenerator.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
+        [HttpGet]
+        [Authorize]
+        public ActionResult<UserInfo> GetUser()
+        {
+            return new UserInfo() {Username = User.GetUsername()};
+        }
+
         [HttpPost]
         public async Task<ActionResult> CreateUser([FromBody] CreateUserBody body)
         {
@@ -55,7 +62,7 @@ namespace GifGenerator.Controllers
             string username = User.GetUsername();
             User user = await FbDbHelper.Client.GetUserAsync(username);
 
-            foreach (string categoryId in user.AllCategoryIds?.Keys.ToNotNull().Concat(new[] { username }))
+            foreach (string categoryId in user.AllCategoryIds?.Keys.ToNotNull().Concat(new[] {username}))
             {
                 Category category = await FbDbHelper.Client.GetCategoryAsync(categoryId);
 

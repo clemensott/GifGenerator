@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace GifGenerator.Models
+namespace GifGenerator.Models.Categories
 {
     public class Category
     {
