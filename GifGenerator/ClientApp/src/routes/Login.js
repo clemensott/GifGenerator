@@ -6,8 +6,8 @@ export default class Login extends Component {
         super(props);
 
         this.state = {
-            username: 'clemens2',
-            password: '123456',
+            username: '',
+            password: '',
             keepLoggedIn: false,
             isLoggingIn: false,
             error: null,
@@ -45,12 +45,11 @@ export default class Login extends Component {
 
             if (response.status === 200) {
                 const token = await response.text();
-                console.log('logged in1:', token, document.cookie);
                 this.props.data.user.username = username;
+                this.props.data.authToken = token;
 
                 document.cookie = `auth=${token}`;
                 this.props.history.push('/');
-                console.log('logged in2:', token, document.cookie);
             } else if (response.status === 400) {
                 this.setState({
                     isLoggingIn: false,
@@ -71,7 +70,6 @@ export default class Login extends Component {
     }
 
     render() {
-        console.log('render login:', this.props.history);
         if (this.state.isLoggingIn) {
             return (
                 <div className="center">

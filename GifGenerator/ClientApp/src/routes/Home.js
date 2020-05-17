@@ -35,7 +35,6 @@ export default class Home extends CategoryBase {
 
             if (response.status === 200) {
                 const newCategoryId = await response.text();
-                console.log('new', newCategoryId);
 
                 this.props.data.categories[newCategoryId] = {
                     id: newCategoryId,

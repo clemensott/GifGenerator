@@ -32,7 +32,6 @@ export default class App extends Component {
     render() {
         const authToken = getCookieValue('auth');
         if (authToken !== this.state.authToken) this.setState({authToken});
-        console.log('app state:', this.state);
 
 
         return (

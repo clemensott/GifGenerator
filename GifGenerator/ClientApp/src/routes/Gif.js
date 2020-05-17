@@ -13,7 +13,9 @@ export default class Gif extends Component {
         return (
             <div>
                 <Navbar data={this.props.data}/>
-                <h1>GIFFFFFFFFFFFFFFFFF</h1>
+                <div className="container">
+                    <h1>GIFFFFFFFFFFFF</h1>
+                </div>
             </div>
         );
     }
