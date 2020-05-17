@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Threading.Tasks;
-using Firebase.Database;
 using Firebase.Database.Query;
 using GifGenerator.Generator;
 using GifGenerator.Helpers;
@@ -40,8 +36,10 @@ namespace GifGenerator.Controllers
                 }
             }
 
-            Stream gifStream = await FbSgHelper.Client.GetGifStreamAsync(gifId);
-            await gifStream.CopyToAsync(Response.Body);
+            using (Stream gifStream = await FbSgHelper.Client.GetGifStreamAsync(gifId))
+            {
+                await gifStream.CopyToAsync(Response.Body);
+            }
         }
 
         [HttpGet("{gifId}/url")]

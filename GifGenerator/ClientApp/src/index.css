@@ -1,6 +1,15 @@
-@media (max-width: 767px) {
-    /* On small screens, the nav menu spans the full width of the screen. Leave a space for it. */
-    body {
-        padding-top: 50px;
-    }
+.center{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.vertical-align-center{
+    top: 50%;
+    transform: translate(0%, -50%);
+}
+
+.content-container{
+    
 }

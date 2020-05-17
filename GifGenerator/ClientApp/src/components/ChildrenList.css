@@ -1,0 +1,15 @@
+﻿.children-list-column {
+    float: left;
+}
+
+.children-list-row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.children-list-item {
+    width: 25%;
+    height: 100px;
+    padding: 3px;
+}

@@ -24,16 +24,15 @@ namespace GifGenerator.Controllers
         [HttpPost]
         public async Task<ActionResult> CreateUser([FromBody] CreateUserBody body)
         {
-            if (!UserHelper.IsValidUsername(body.Username) ||
-                !UserHelper.IsPasswordValid(body.Password)) return ValidationProblem();
+            if (!UserHelper.IsValidUsername(body.Username))return BadRequest("Username is not valid.");
+            if (!UserHelper.IsPasswordValid(body.Password)) return BadRequest("Password is not valid.");
 
             bool containsUser = await FbDbHelper.Client.UserQuery(body.Username).ContainsKeyAsync();
 
-            if (containsUser) return BadRequest();
+            if (containsUser) return BadRequest("User already exists");
 
             User user = new User()
             {
-                Username = body.Username,
                 Password = body.Password,
             };
             await FbDbHelper.Client.UserQuery(body.Username).PutAsync(user);

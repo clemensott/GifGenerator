@@ -48,8 +48,11 @@ namespace GifGenerator.Controllers
 
         private static async Task<CategoryInfo> GetCategoryInfo(string categoryId, Category category, string username)
         {
+            string id = categoryId == username ? string.Empty : categoryId;
             string name = string.IsNullOrWhiteSpace(category.ParentId) ? username : category.Name;
-            return new CategoryInfo(categoryId, name, category.ParentId)
+            string parentId = category.ParentId == username ? string.Empty : category.ParentId;
+            
+            return new CategoryInfo(id, name, parentId)
             {
                 Children = await Task.WhenAll(category.ChildrenIds?.Keys.ToNotNull().Select(async childId =>
                 {

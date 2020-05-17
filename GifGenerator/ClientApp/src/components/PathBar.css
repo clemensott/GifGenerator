@@ -1,0 +1,19 @@
+﻿.path-bar-category {
+    display: inline;
+}
+
+.path-bar-text {
+    display: inline;
+}
+
+.path-bar-category-text {
+    color: deepskyblue;
+}
+
+.path-bar-split {
+    color: white;
+}
+
+.path-bar-current {
+    color: wheat;
+}

@@ -1,0 +1,18 @@
+﻿.home-container{
+}
+
+.home-column {
+    float: left;
+}
+
+.home-row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.home-child {
+    width: 25%;
+    height: 100px;
+    padding: 3px;
+}

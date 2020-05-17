@@ -1,0 +1,11 @@
+﻿.category-list-item{
+    background: darkcyan;
+    color: white;
+    padding: 10px;
+    height: 100%;
+    text-align: center;
+}
+
+.category-list-item-name{
+    color: orange;
+}

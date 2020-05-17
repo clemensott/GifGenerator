@@ -1,0 +1,15 @@
+﻿.gifs-list-column {
+    float: left;
+    width: 1000px;
+}
+
+.gifs-list-row:after {
+    content: "";
+    display: table;
+    clear: both;
+
+}
+
+.gif-list-item {
+    padding: 2px;
+}
