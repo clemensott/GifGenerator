@@ -121,13 +121,15 @@ namespace GifGenerator.Controllers
             if (meta == null) return NotFound();
 
             string username = User.GetUsername();
-            if (meta.CategoryId != username)
+            bool isBaseCategory = meta.CategoryId == username;
+            if (!isBaseCategory)
             {
                 bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, meta.CategoryId);
 
                 if (!hasCategory) return NotFound();
             }
 
+            meta.CategoryId = isBaseCategory ? string.Empty : meta.CategoryId;
             return new GifInfo(gifId, meta);
         }
 

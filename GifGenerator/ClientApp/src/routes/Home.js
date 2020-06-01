@@ -4,10 +4,11 @@ import "./Home.css"
 import Navbar from "../components/Navbar";
 import GifsList from "../components/GifsList";
 import ChildrenList from "../components/ChildrenList";
-import CategoryBase from "./CategoryBase";
-import swal from 'sweetalert';
+import DataCacheBase from "./DataCacheBase";
+import {Swal} from "../helper/swal";
+import getPathFromCache from "../helper/getPathFromCache";
 
-export default class Home extends CategoryBase {
+export default class Home extends DataCacheBase {
     constructor(props) {
         super(props);
 
@@ -15,12 +16,21 @@ export default class Home extends CategoryBase {
     }
 
     async addCategory() {
-        const name = await swal({
-            title: 'Enter name of new category',
-            content: "input",
-            buttons: true,
-        });
-        if (!name) return;
+        const result = await new new Swal({
+            title: 'Add category',
+            icon: 'fa-plus-square',
+            text: 'Name:',
+            input: {placeholder: 'Enter name'},
+            buttons: [{
+                type: 'success',
+                text: 'Create',
+            }, {
+                type: 'primary',
+                text: 'Cancel',
+            }],
+        }).show();
+        if (result.type !== 'success') return;
+        const name = result.value;
 
         try {
             const categoryId = this.getCurrentCategoryId();
@@ -36,13 +46,13 @@ export default class Home extends CategoryBase {
             if (response.status === 200) {
                 const newCategoryId = await response.text();
 
-                this.props.data.categories[newCategoryId] = {
+                this.props.cache.categories[newCategoryId] = {
                     id: newCategoryId,
                     name,
                     parentId: categoryId
                 };
 
-                const category = this.props.data.categoryData[categoryId];
+                const category = this.props.cache.categoryData[categoryId];
                 if (category) {
                     category.children.push({
                         id: newCategoryId,
@@ -54,26 +64,31 @@ export default class Home extends CategoryBase {
                     categoryId,
                 })
 
-                await swal({
-                    title: "Category added",
-                    icon: "success",
-                });
+                await new new Swal({
+                    title: 'Category added',
+                    icon: 'fa-check-circle',
+                    color: 'green',
+                    buttons: 'Ok',
+                }).show();
             } else {
                 console.log(await response.json());
-                await swal({
-                    title: "Error",
+                await new new Swal({
+                    title: 'Error',
+                    icon: 'fa-times',
+                    color: 'red',
                     text: `Status code: ${response.status}`,
-                    icon: "error",
-                });
-
+                    buttons: 'Ok',
+                }).show();
             }
         } catch (e) {
             console.log(e);
-            await swal({
-                title: "Exception",
+            await new new Swal({
+                title: 'Exception',
+                icon: 'fa-times',
+                color: 'red',
                 text: `Status code: ${e.message}`,
-                icon: "error",
-            });
+                buttons: 'Ok',
+            }).show();
         }
     }
 
@@ -92,14 +107,20 @@ export default class Home extends CategoryBase {
             title: 'Add category',
             onClick: this.addCategory,
             icon: 'fa-plus',
-        }, {
-            title: 'Edit category',
-            href: `/edit/${categoryId}`,
-            icon: 'fa-edit',
         }];
-        const category = this.props.data.categoryData[categoryId];
-        const path = this.getPathFromCache(categoryId, false);
+        if (categoryId) {
+            customIcons.push({
+                title: 'Edit category',
+                href: `/edit/${categoryId}`,
+                icon: 'fa-edit',
+            });
+        }
+        const category = this.props.cache.categoryData[categoryId];
+        const path = getPathFromCache(this.props.cache.categories, categoryId, false);
         const isEmpty = category && category.children.length === 0 && category.gifs.length === 0;
+
+        const currentCategoryName = this.props.cache.categories[categoryId] && this.props.cache.categories[categoryId].name;
+        if (currentCategoryName) document.title = `GIFs - ${currentCategoryName}`;
 
         return (
             <div>
@@ -120,18 +141,22 @@ export default class Home extends CategoryBase {
         );
     }
 
-    componentDidMount() {
-        this.checkUpdateCategory();
-        this.checkUpdatePath();
+    async componentDidMount() {
+        super.componentDidMount();
+        await this.checkData();
     }
 
-    componentDidUpdate() {
-        this.checkUpdateCategory();
-        this.checkUpdatePath();
+    async componentDidUpdate() {
+        super.componentDidMount()
+        await this.checkData();
     }
 
-    componentWillUnmount() {
-        super.componentWillUnmount();
-        if (swal.getState().isOpen) swal.close();
+    async checkData() {
+        const categoryId = this.getCurrentCategoryId();
+        await Promise.all([this.checkUpdateCategory(categoryId), this.checkUpdatePath(categoryId)]);
+    }
+
+    getCurrentCategoryId() {
+        return this.props.match.params.categoryId || '';
     }
 }

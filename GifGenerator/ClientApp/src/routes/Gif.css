@@ -1,0 +1,10 @@
+﻿.gif-item-container {
+    height: 500pt;
+    text-align: center;
+}
+
+.gif-item {
+    height: 100%;
+    padding: 10px;
+    vertical-align: middle;
+}

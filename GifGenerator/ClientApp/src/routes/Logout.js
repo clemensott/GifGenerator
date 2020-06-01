@@ -40,9 +40,6 @@ export default class Logout extends Component {
         this.props.data.user = {
             username: null,
         };
-        this.props.data.categoryData = {};
-        this.props.data.categories = {};
-        this.props.data.gifs = {};
         document.cookie = "";
     }
 }

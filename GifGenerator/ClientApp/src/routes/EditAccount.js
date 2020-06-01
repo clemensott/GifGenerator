@@ -1,7 +1,8 @@
-﻿import React, {Component} from 'react';
+﻿import React from 'react';
 import Navbar from "../components/Navbar";
+import DataCacheBase from "./DataCacheBase";
 
-export default class EditAccount extends Component {
+export default class EditAccount extends DataCacheBase {
     constructor(props) {
         super(props);
 
@@ -74,6 +75,8 @@ export default class EditAccount extends Component {
     }
 
     render() {
+        document.title = 'GIFs - Edit Account';
+
         const path = {
             links: [{
                 href: '/',

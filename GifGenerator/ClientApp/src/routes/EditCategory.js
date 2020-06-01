@@ -1,10 +1,11 @@
 ﻿import React from 'react';
 import Navbar from "../components/Navbar";
 import {Redirect} from "react-router-dom";
-import CategoryBase from "./CategoryBase";
-import swal from 'sweetalert';
+import DataCacheBase from "./DataCacheBase";
+import {Swal} from "../helper/swal";
+import getPathFromCache from "../helper/getPathFromCache";
 
-export default class EditCategory extends CategoryBase {
+export default class EditCategory extends DataCacheBase {
     constructor(props) {
         super(props);
 
@@ -41,8 +42,8 @@ export default class EditCategory extends CategoryBase {
 
             if (response.status === 200) {
                 const category = await response.json();
-                this.props.data.categoryData[categoryId] = category;
-                this.props.data.categories[category.id].name = newName;
+                this.props.cache.categoryData[categoryId] = category;
+                this.props.cache.categories[category.id].name = newName;
                 this.setState({
                     isLoading: false,
                     changeNameSuccessfully: true,
@@ -66,9 +67,9 @@ export default class EditCategory extends CategoryBase {
     }
 
     deleteCategoryFromCache(categoryId) {
-        const category = this.props.data.categoryData[categoryId];
+        const category = this.props.cache.categoryData[categoryId];
         if (category) {
-            const parentCategory = this.props.data.categoryData[category.parentId];
+            const parentCategory = this.props.cache.categoryData[category.parentId];
             if (parentCategory) {
                 for (let i = parentCategory.children.length - 1; i >= 0; i--) {
                     if (parentCategory.children[i].id === categoryId) parentCategory.children.splice(i, 1);
@@ -79,27 +80,33 @@ export default class EditCategory extends CategoryBase {
         const categoryIds = [categoryId];
         while (categoryIds.length > 0) {
             const deleteCategoryId = categoryIds.shift();
-            const deleteCategory = this.props.data.categoryData[deleteCategoryId];
+            const deleteCategory = this.props.cache.categoryData[deleteCategoryId];
 
             if (!deleteCategory) continue;
 
             deleteCategory.children.forEach(child => categoryIds.push(child.id));
             deleteCategory.gifs.forEach(gif => delete this.props.data.gifs[gif.id]);
 
-            delete this.props.data.categoryData[deleteCategoryId];
-            delete this.props.data.categories[deleteCategoryId];
+            delete this.props.cache.categoryData[deleteCategoryId];
+            delete this.props.cache.categories[deleteCategoryId];
         }
     }
 
     async deleteCategory() {
-        const willDelete = await swal({
-            title: "Are you sure you?",
-            text: "You are deleting all gifs and sub categories. Once deleted, you will not be able to recover all of this!",
-            icon: "warning",
-            buttons: true,
-            dangerMode: true,
-        });
-        if (!willDelete) return;
+        const result = await new Swal({
+            title: 'Are you sure you?',
+            text: 'You are deleting all gifs and sub categories. Once deleted, you will not be able to recover all of this!',
+            icon: 'fa-exclamation-triangle',
+            color: 'red',
+            buttons: [{
+                type: 'danger',
+                text: 'Delete',
+            }, {
+                type: 'primary',
+                text: 'Cancel',
+            }],
+        }).show();
+        if (result.type !== 'danger') return;
 
         const categoryId = this.getCurrentCategoryId();
         this.setState({
@@ -128,8 +135,11 @@ export default class EditCategory extends CategoryBase {
             href: `/edit/${categoryId}`,
             icon: 'fa-edit',
         }];
-        const path = this.getPathFromCache(categoryId, true);
+        const path = getPathFromCache(this.props.cache.categories, categoryId, true);
 
+        const currentCategoryName = this.props.cache.categories[categoryId] && this.props.cache.categories[categoryId].name;
+        if (currentCategoryName) document.title = `GIFs - Edit - ${currentCategoryName}`;
+        
         return (
             <div>
                 <Navbar path={path} customIcons={customIcons}/>
@@ -168,16 +178,17 @@ export default class EditCategory extends CategoryBase {
         );
     }
 
-    componentDidMount() {
-        this.checkUpdatePath();
+    async componentDidMount() {
+        super.componentDidMount();
+        await this.checkUpdatePath(this.getCurrentCategoryId())
     }
 
-    componentDidUpdate() {
-        this.checkUpdatePath();
+    async componentDidUpdate() {
+        super.componentDidMount()
+        await this.checkUpdatePath(this.getCurrentCategoryId())
     }
 
-    componentWillUnmount() {
-        super.componentWillUnmount();
-        if (swal.getState().isOpen) swal.close();
+    getCurrentCategoryId() {
+        return this.props.match.params.categoryId || '';
     }
 }
