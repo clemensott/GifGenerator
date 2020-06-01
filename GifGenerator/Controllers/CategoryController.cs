@@ -16,37 +16,22 @@ namespace GifGenerator.Controllers
     [Authorize]
     public class CategoryController : ControllerBase
     {
-        [HttpGet]
-        [Authorize]
-        public Task<ActionResult<CategoryInfo>> GetCategoryInfo()
-        {
-            string username = User.GetUsername();
-            return GetCategoryInfo(username, username, false);
-        }
-
         [HttpGet("{categoryId}")]
         [Authorize]
-        public Task<ActionResult<CategoryInfo>> GetCategoryInfo(string categoryId)
+        public async Task<ActionResult<CategoryInfo>> GetCategoryInfo(string categoryId)
         {
-            return GetCategoryInfo(categoryId, User.GetUsername(), true);
-        }
+            if (!FbDbHelper.IsValidKey(categoryId)) return BadRequest();
 
-        private async Task<ActionResult<CategoryInfo>> GetCategoryInfo(string categoryId, string username,
-            bool checkUserHasCategoryId)
-        {
-            if (checkUserHasCategoryId)
-            {
-                bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, categoryId);
-
-                if (!hasCategory) return NotFound();
-            }
+            string username = User.GetUsername();
+            bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, categoryId);
+            if (!hasCategory) return NotFound();
 
             Category category = await FbDbHelper.Client.GetCategoryAsync(categoryId);
 
-            return await GetCategoryInfo(categoryId, category ?? new Category(), username);
+            return await GetCategoryInfo(categoryId, category ?? new Category());
         }
 
-        private static async Task<CategoryInfo> GetCategoryInfo(string categoryId, Category category, string username)
+        private static async Task<CategoryInfo> GetCategoryInfo(string categoryId, Category category)
         {
             return new CategoryInfo(categoryId, category.Name, category.ParentId)
             {
@@ -66,6 +51,8 @@ namespace GifGenerator.Controllers
         [HttpGet("{categoryId}/path")]
         public async Task<ActionResult<IEnumerable<CategoryChildInfo>>> Parents(string categoryId)
         {
+            if (!FbDbHelper.IsValidKey(categoryId)) return BadRequest();
+
             string username = User.GetUsername();
             bool hasParentId = await FbDbHelper.Client.UserContainsCategoryAsync(username, categoryId);
 
@@ -73,44 +60,25 @@ namespace GifGenerator.Controllers
 
             Stack<CategoryChildInfo> stack = new Stack<CategoryChildInfo>();
 
-            while (true)
+            while (!string.IsNullOrWhiteSpace(categoryId))
             {
                 Category category = await FbDbHelper.Client.GetCategoryAsync(categoryId);
-                if (string.IsNullOrWhiteSpace(category.ParentId))
-                {
-                    stack.Push(new CategoryChildInfo(null, username));
-                    return stack;
-                }
-
                 stack.Push(new CategoryChildInfo(categoryId, category.Name));
                 categoryId = category.ParentId;
             }
+            
+            return stack;
         }
 
-        [HttpPost("create")]
+        [HttpPost("{parentId}/create")]
         [Authorize]
-        public Task<ActionResult<string>> CreateCategory([FromBody] string name)
+        public async Task<ActionResult<string>> CreateCategory(string parentId, [FromBody] string name)
         {
-            string username = User.GetUsername();
-            return CreateCategory(name, username, username, false);
-        }
+            if (!FbDbHelper.IsValidKey(parentId)) return BadRequest();
 
-        [HttpPost("{categoryId}/create")]
-        [Authorize]
-        public Task<ActionResult<string>> CreateCategory(string categoryId, [FromBody] string name)
-        {
             string username = User.GetUsername();
-            return CreateCategory(name, categoryId, username, true);
-        }
-
-        private async Task<ActionResult<string>> CreateCategory(string name, string parentId, string username,
-            bool checkParentId)
-        {
-            if (checkParentId)
-            {
-                bool hasParentId = await FbDbHelper.Client.UserContainsCategoryAsync(username, parentId);
-                if (!hasParentId) return NotFound();
-            }
+            bool hasParentId = await FbDbHelper.Client.UserContainsCategoryAsync(username, parentId);
+            if (!hasParentId) return NotFound();
 
             Category category = new Category()
             {
@@ -131,8 +99,9 @@ namespace GifGenerator.Controllers
         [Authorize]
         public async Task<ActionResult<CategoryInfo>> RenameCategory(string categoryId, [FromBody] string name)
         {
-            bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), categoryId);
+            if (!FbDbHelper.IsValidKey(categoryId)) return BadRequest();
 
+            bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), categoryId);
             if (!hasCategory) return NotFound();
 
             await FbDbHelper.Client.CategoryNameQuery(categoryId).PutAsync<string>(name);
@@ -140,33 +109,30 @@ namespace GifGenerator.Controllers
             return await GetCategoryInfo(categoryId);
         }
 
-        [HttpPut("{categoryId}/move")]
-        public Task<ActionResult> MoveCategory(string categoryId)
+        [HttpPut("{categoryId}/move/{destCategoryId}")]
+        public Task<ActionResult> MoveCategory(string categoryId, string destCategoryId)
         {
             string username = User.GetUsername();
-            return MoveCategory(categoryId, username, username, false);
+            return MoveCategory(categoryId, destCategoryId, username, false);
         }
 
-        [HttpPut("{srcCategoryId}/move/{destCategoryId}")]
-        public Task<ActionResult> MoveCategory(string srcCategoryId, string destCategoryId)
-        {
-            string username = User.GetUsername();
-            return MoveCategory(srcCategoryId, destCategoryId, username, false);
-        }
-
-        private async Task<ActionResult> MoveCategory(string srcCategoryId, string destCategoryId,
+        private async Task<ActionResult> MoveCategory(string categoryId, string destCategoryId,
             string username, bool checkDestCategory)
         {
-            if (srcCategoryId == destCategoryId) return BadRequest();
+            if (categoryId == destCategoryId || !FbDbHelper.IsValidKey(categoryId) ||
+                !FbDbHelper.IsValidKey(destCategoryId)) return BadRequest();
 
-            if (!await FbDbHelper.Client.UserContainsCategoryAsync(username, srcCategoryId) ||
+            string rootCategoryId = await FbDbHelper.Client.GetUserRootCategoryIdAsync(username);
+            if (categoryId == rootCategoryId) return BadRequest();
+
+            if (!await FbDbHelper.Client.UserContainsCategoryAsync(username, categoryId) ||
                 (checkDestCategory && !await FbDbHelper.Client.UserContainsCategoryAsync(username, destCategoryId)))
                 return NotFound();
 
-            string srcCategoryParentId = await FbDbHelper.Client.GetCategoryParentIdAsync(srcCategoryId);
-            await FbDbHelper.Client.PutCategoryChildAsync(destCategoryId, srcCategoryId);
-            await FbDbHelper.Client.CategoryParentQuery(srcCategoryId).PutAsync<string>(destCategoryId);
-            await FbDbHelper.Client.DeleteCategoryChildAsync(srcCategoryParentId, srcCategoryId);
+            string srcCategoryParentId = await FbDbHelper.Client.GetCategoryParentIdAsync(categoryId);
+            await FbDbHelper.Client.PutCategoryChildAsync(destCategoryId, categoryId);
+            await FbDbHelper.Client.CategoryParentQuery(categoryId).PutAsync<string>(destCategoryId);
+            await FbDbHelper.Client.DeleteCategoryChildAsync(srcCategoryParentId, categoryId);
 
             return Ok();
         }
@@ -174,9 +140,14 @@ namespace GifGenerator.Controllers
         [HttpDelete("{categoryId}")]
         public async Task<ActionResult> RemoveCategory(string categoryId)
         {
-            string username = User.GetUsername();
-            bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), categoryId);
+            if (!FbDbHelper.IsValidKey(categoryId)) return BadRequest();
 
+            string username = User.GetUsername();
+
+            string rootCategoryId = await FbDbHelper.Client.GetUserRootCategoryIdAsync(username);
+            if (categoryId == rootCategoryId) return BadRequest();
+
+            bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), categoryId);
             if (!hasCategory) return NotFound();
 
             Queue<string> deleteCategoryIds = new Queue<string>();

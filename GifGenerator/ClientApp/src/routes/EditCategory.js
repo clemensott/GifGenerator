@@ -139,7 +139,9 @@ export default class EditCategory extends DataCacheBase {
 
         const currentCategoryName = this.props.cache.categories[categoryId] && this.props.cache.categories[categoryId].name;
         if (currentCategoryName) document.title = `GIFs - Edit - ${currentCategoryName}`;
-        
+
+        const isRootCategory = categoryId === (this.props.data.user && this.props.data.user.rootCategoryId);
+
         return (
             <div>
                 <Navbar path={path} customIcons={customIcons}/>
@@ -165,7 +167,7 @@ export default class EditCategory extends DataCacheBase {
                         Change name
                     </button>
 
-                    <button className="btn bg-danger text-light float-right"
+                    <button className={`btn bg-danger text-light float-right ${isRootCategory ? 'd-none' : ''}`}
                             onClick={async () => await this.deleteCategory()}>
                         Delete Category
                     </button>
@@ -189,6 +191,6 @@ export default class EditCategory extends DataCacheBase {
     }
 
     getCurrentCategoryId() {
-        return this.props.match.params.categoryId || '';
+        return this.props.match.params.categoryId || (this.props.data.user && this.props.data.user.rootCategoryId);
     }
 }

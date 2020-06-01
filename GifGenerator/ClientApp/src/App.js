@@ -24,11 +24,8 @@ export default class App extends Component {
         }
 
         this.state = {
-            set: (update) => this.setState(update),
             authToken: getCookieValue('auth'),
-            user: {
-                username: null,
-            },
+            user: null,
             swal: null,
         }
 
@@ -39,7 +36,6 @@ export default class App extends Component {
     render() {
         const authToken = getCookieValue('auth');
         if (authToken !== this.state.authToken) this.setState({authToken});
-
 
         return (
             <div>
@@ -64,7 +60,11 @@ export default class App extends Component {
 
     async componentDidMount() {
         addOnShowSwalListener(this.onShowSwalListener);
-        if (!this.state.user.username && this.state.authToken) {
+        await this.checkUser();
+    }
+
+    async checkUser() {
+        if (!this.state.user && this.state.authToken) {
             try {
                 const response = await fetch('/api/user');
                 if (response.status === 200) {

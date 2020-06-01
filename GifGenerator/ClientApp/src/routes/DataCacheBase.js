@@ -23,7 +23,7 @@ export default class DataCacheBase extends Component {
     }
 
     componentWillUnmount() {
-        this.isComponentMounted = true;
+        this.isComponentMounted = false;
     }
 
     setState(state, callback) {
@@ -32,12 +32,8 @@ export default class DataCacheBase extends Component {
     }
 
     async checkUpdatePath(categoryId) {
-        console.log('checkPath:', this.props.data.user.username, this.state.lastFetchPathId, categoryId);
-        if (categoryId && categoryId !== this.state.lastFetchPathId) await this.updatePath(categoryId)
-        else if (this.props.data.user.username && this.state.lastFetchPathId !== categoryId) {
-            console.log('setPathWithRaw name');
-            this.fetchPathId = categoryId;
-            this.setPathWithRaw(categoryId, [{id: '', name: this.props.data.user.username}]);
+        if (categoryId && categoryId !== this.state.fetchPathId && categoryId !== this.state.lastFetchPathId) {
+            await this.updatePath(categoryId);
         }
     }
 
@@ -48,7 +44,18 @@ export default class DataCacheBase extends Component {
 
             if (response.status === 200) {
                 const path = await response.json();
-                this.setPathWithRaw(categoryId, path);
+                path.reduce((last, current) => {
+                    this.props.cache.categories[current.id] = {
+                        id: current.id,
+                        name: current.name,
+                        parentId: last ? last.id : null,
+                    }
+                    return current;
+                }, null);
+
+                this.setState({
+                    lastFetchPathId: categoryId
+                });
             } else if (response.status === 401) {
                 this.setState({logout: true});
             } else if (this.props.history.location.pathname !== '/') {
@@ -59,25 +66,8 @@ export default class DataCacheBase extends Component {
         }
     }
 
-    setPathWithRaw(categoryId, rawPath) {
-        rawPath.reduce((last, current) => {
-            this.props.cache.categories[current.id || ''] = {
-                id: current.id || '',
-                name: current.name,
-                parentId: last ? last.id || '' : null,
-            }
-            return current;
-        }, null);
-
-        if (categoryId === this.fetchPathId && this.state.lastFetchPathId !== categoryId) {
-            this.setState({
-                lastFetchPathId: categoryId
-            });
-        }
-    }
-
     async checkUpdateCategory(categoryId) {
-        if (categoryId !== this.state.lastFetchCategoryId && categoryId !== this.fetchCategoryId) {
+        if (categoryId && categoryId !== this.state.lastFetchCategoryId && categoryId !== this.fetchCategoryId) {
             await this.updateCategory(categoryId);
         }
     }
@@ -89,7 +79,7 @@ export default class DataCacheBase extends Component {
 
             if (response.status === 200) {
                 const category = await response.json();
-                console.log('update cat:', category);
+
                 this.props.cache.categoryData[categoryId] = category;
                 this.props.cache.categories[category.id] = {
                     id: category.id || '',
@@ -123,7 +113,7 @@ export default class DataCacheBase extends Component {
     }
 
     async checkGif(gifId) {
-        if (gifId !== this.state.lastFetchGifId && gifId !== this.fetchGifId) {
+        if (gifId && gifId !== this.state.lastFetchGifId && gifId !== this.fetchGifId) {
             await this.updateGif(gifId);
         }
     }

@@ -35,7 +35,7 @@ export default class Login extends Component {
                 username,
                 password,
             };
-            const response = await fetch('/api/auth/login', {
+            let loginResponse = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8'
@@ -43,30 +43,33 @@ export default class Login extends Component {
                 body: JSON.stringify(body),
             });
 
-            if (response.status === 200) {
-                const token = await response.text();
-                this.props.data.user.username = username;
-                this.props.data.authToken = token;
-
+            if (loginResponse.status === 200) {
+                const token = await loginResponse.text();
                 document.cookie = `auth=${token}`;
-                this.props.history.push('/');
-            } else if (response.status === 400) {
-                this.setState({
-                    isLoggingIn: false,
-                    error: 'Please enter a correct Username and password',
-                });
+
+                const userResponse = await fetch('/api/user');
+                if (userResponse.status === 200) {
+                    this.props.data.user = await userResponse.json();
+                    this.props.data.authToken = token;
+                    this.props.history.push('/');
+                } else {
+                    this.setError('A error occured');
+                }
+            } else if (loginResponse.status === 400) {
+                this.setError('Please enter a correct Username and password');
             } else {
-                this.setState({
-                    isLoggingIn: false,
-                    error: 'A error occured',
-                });
+                this.setError('A error occured');
             }
         } catch (e) {
-            this.setState({
-                isLoggingIn: false,
-                error: e.message,
-            });
+            this.setError(e.message);
         }
+    }
+
+    setError(message) {
+        this.setState({
+            isLoggingIn: false,
+            error: message,
+        });
     }
 
     render() {

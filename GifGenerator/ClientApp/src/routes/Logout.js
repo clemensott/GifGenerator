@@ -37,9 +37,7 @@ export default class Logout extends Component {
     }
 
     deleteAllCachedData() {
-        this.props.data.user = {
-            username: null,
-        };
+        this.props.data.user = null;
         document.cookie = "";
     }
 }

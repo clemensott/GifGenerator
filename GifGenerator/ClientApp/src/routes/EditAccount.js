@@ -74,15 +74,22 @@ export default class EditAccount extends DataCacheBase {
         }
     }
 
+    getPath() {
+        if (!this.props.data.user) return null;
+        const rootCategory = this.props.cache.categories[this.props.data.user.rootCategoryId];
+        if (!rootCategory) return null;
+        return {
+            links: [{
+                href: `/${rootCategory.id}`,
+                text: rootCategory.name,
+            }],
+        }
+    }
+
     render() {
         document.title = 'GIFs - Edit Account';
 
-        const path = {
-            links: [{
-                href: '/',
-                text: this.props.data.user.username,
-            }],
-        }
+        const path = this.getPath();
         return (
             <div>
                 <Navbar path={path}/>
@@ -131,5 +138,18 @@ export default class EditAccount extends DataCacheBase {
                 </div>
             </div>
         );
+    }
+
+    async componentDidMount() {
+        super.componentDidMount();
+        await this.checkRootCategory();
+    }
+
+    async componentDidUpdate() {
+        await this.checkRootCategory();
+    }
+
+    async checkRootCategory() {
+        if (this.props.data.user) await this.checkUpdatePath(this.props.data.user.rootCategoryId);
     }
 }

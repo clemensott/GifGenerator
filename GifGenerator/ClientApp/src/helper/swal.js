@@ -28,16 +28,13 @@ function getSwalRemoveOnResolveListenerFunction(swal) {
 
 function getSwalShowFunction(swal) {
     return function () {
-        console.log('show1', swal.title);
         swal.promise = new Promise(resolve => {
-            console.log('show2');
             swal.resolve = (type, value) => {
                 const result = {type, value};
                 resolve(result);
                 swal.onResolveListeners.forEach(listener => listener(swal, result))
             }
         });
-        console.log('show3');
 
         onShowSwalListeners.forEach(listener => {
             listener(swal);

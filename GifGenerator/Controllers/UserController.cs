@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Firebase.Database;
 using Firebase.Database.Query;
 using GifGenerator.Helpers;
 using GifGenerator.Models.Categories;
@@ -16,24 +17,40 @@ namespace GifGenerator.Controllers
     {
         [HttpGet]
         [Authorize]
-        public ActionResult<UserInfo> GetUser()
+        public async Task<ActionResult<UserInfo>> GetUser()
         {
-            return new UserInfo() {Username = User.GetUsername()};
+            string username = User.GetUsername();
+            User user = await FbDbHelper.Client.GetUserAsync(username);
+            
+            if (user == null) return BadRequest();
+            
+            return new UserInfo(username, user);
         }
 
         [HttpPost]
         public async Task<ActionResult> CreateUser([FromBody] CreateUserBody body)
         {
-            if (!UserHelper.IsValidUsername(body.Username))return BadRequest("Username is not valid.");
+            if (!UserHelper.IsValidUsername(body.Username) || !FbDbHelper.IsValidKey(body.Username))
+            {
+                return BadRequest("Username is not valid.");
+            }
             if (!UserHelper.IsPasswordValid(body.Password)) return BadRequest("Password is not valid.");
 
             bool containsUser = await FbDbHelper.Client.UserQuery(body.Username).ContainsKeyAsync();
 
             if (containsUser) return BadRequest("User already exists");
 
+            Category rootCategory = new Category()
+            {
+                Name = body.Username,
+            };
+            FirebaseObject<Category> addedCategory = await FbDbHelper.Client.CategoriesQuery().PostAsync(rootCategory);
+            string rootCategoryId = addedCategory.Key;
             User user = new User()
             {
                 Password = body.Password,
+                RootCategoryId = rootCategoryId,
+                AllCategoryIds = new Dictionary<string, bool>() {{rootCategoryId, true}}
             };
             await FbDbHelper.Client.UserQuery(body.Username).PutAsync(user);
 
@@ -47,8 +64,10 @@ namespace GifGenerator.Controllers
             if (!UserHelper.IsPasswordValid(body.NewPassword)) return ValidationProblem();
 
             string username = User.GetUsername();
+            bool userExists = await FbDbHelper.Client.UserPasswordQuery(username).ContainsKeyAsync();
+            if (!userExists) return BadRequest();
 
-            await FbDbHelper.Client.UserPasswordQuery(username).PutAsync(body.NewPassword);
+            await FbDbHelper.Client.UserPasswordQuery(username).PutAsync<string>(body.NewPassword);
 
             return Ok();
         }
@@ -61,7 +80,9 @@ namespace GifGenerator.Controllers
             string username = User.GetUsername();
             User user = await FbDbHelper.Client.GetUserAsync(username);
 
-            foreach (string categoryId in user.AllCategoryIds?.Keys.ToNotNull().Concat(new[] {username}))
+            if (user == null) return BadRequest();
+
+            foreach (string categoryId in user.AllCategoryIds?.Keys.ToNotNull())
             {
                 Category category = await FbDbHelper.Client.GetCategoryAsync(categoryId);
 

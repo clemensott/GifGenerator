@@ -3,6 +3,8 @@ using Firebase.Database.Query;
 using GifGenerator.Models.Gifs;
 using GifGenerator.Models.Users;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using GifGenerator.Models.Categories;
 
@@ -14,6 +16,13 @@ namespace GifGenerator.Helpers
     public static class FbDbHelper
     {
         private const string LoginBaseChild = "Login";
+        private static readonly char[] invalidKeyCharacters = GetInvalidKeyCharacters().ToArray();
+
+        private static IEnumerable<char> GetInvalidKeyCharacters()
+        {
+            return new[] {'.', '$', '#', '[', ']', '/', (char)127}
+                .Concat(Enumerable.Range(0, 32).Select(i => (char)i));
+        }
 
         private static FirebaseClient instance;
 
@@ -34,6 +43,11 @@ namespace GifGenerator.Helpers
 
                 return instance;
             }
+        }
+
+        public static bool IsValidKey(string key)
+        {
+            return key.Length > 0 && !key.Any(invalidKeyCharacters.Contains);
         }
 
         public static async Task<bool> ContainsKeyAsync(this FirebaseQuery query)
@@ -65,6 +79,17 @@ namespace GifGenerator.Helpers
         public static Task<string> GetUserPasswordAsync(this FirebaseClient client, string username)
         {
             return client.UserPasswordQuery(username).OnceSingleAsync<string>();
+        }
+
+
+        public static ChildQuery UserRootCategoryIdQuery(this FirebaseClient client, string username)
+        {
+            return client.Child(nameof(User)).Child(username).Child(nameof(User.RootCategoryId));
+        }
+
+        public static Task<string> GetUserRootCategoryIdAsync(this FirebaseClient client, string username)
+        {
+            return client.UserRootCategoryIdQuery(username).OnceSingleAsync<string>();
         }
 
         public static ChildQuery UserAllCategoriesQuery(this FirebaseClient client, string username)

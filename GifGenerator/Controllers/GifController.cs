@@ -18,6 +18,12 @@ namespace GifGenerator.Controllers
         [HttpGet("{gifId}")]
         public async Task GetGif(string gifId)
         {
+            if (!FbDbHelper.IsValidKey(gifId))
+            {
+                Response.StatusCode = 400;
+                return;
+            }
+
             Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
             if (meta == null)
             {
@@ -45,6 +51,8 @@ namespace GifGenerator.Controllers
         [HttpGet("{gifId}/url")]
         public async Task<ActionResult<string>> GetGifUrl(string gifId)
         {
+            if (!FbDbHelper.IsValidKey(gifId)) return BadRequest();
+
             Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
             if (meta == null) return NotFound();
 
@@ -69,30 +77,16 @@ namespace GifGenerator.Controllers
             }
         }
 
-        [HttpPost("create/add")]
-        public Task<ActionResult<string>> CreateAdd([FromBody] GifCreateBody body)
-        {
-            string username = User.GetUsername();
-            return CreateAdd(body, username, username, false);
-        }
-
         [HttpPost("create/add/{categoryId}")]
-        public Task<ActionResult<string>> CreateAdd(string categoryId, [FromBody] GifCreateBody body)
+        public async Task<ActionResult<string>> CreateAdd(string categoryId, [FromBody] GifCreateBody body)
         {
-            string username = User.GetUsername();
-            return CreateAdd(body, categoryId, username, true);
-        }
+            if (!FbDbHelper.IsValidKey(categoryId)) return BadRequest();
 
-        public async Task<ActionResult<string>> CreateAdd(GifCreateBody body,
-            string categoryId, string username, bool checkCategoryId)
-        {
             string gifId;
+            string username = User.GetUsername();
 
-            if (checkCategoryId)
-            {
-                bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, categoryId);
-                if (!hasCategory) return NotFound();
-            }
+            bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, categoryId);
+            if (!hasCategory) return NotFound();
 
             using (Image gif = await GifsGenerator.Create(body))
             {
@@ -117,6 +111,8 @@ namespace GifGenerator.Controllers
         [HttpGet("{gifId}/meta")]
         public async Task<ActionResult<GifInfo>> GetMeta(string gifId)
         {
+            if (!FbDbHelper.IsValidKey(gifId)) return BadRequest();
+
             Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
             if (meta == null) return NotFound();
 
@@ -136,6 +132,8 @@ namespace GifGenerator.Controllers
         [HttpPut("{gifId}/customtag")]
         public async Task<ActionResult> SetCustomTag(string gifId, [FromBody] string newCustomTag)
         {
+            if (!FbDbHelper.IsValidKey(gifId)) return BadRequest();
+
             Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
             if (meta == null) return NotFound();
 
@@ -148,31 +146,20 @@ namespace GifGenerator.Controllers
             return Ok();
         }
 
-        [HttpPut("{gifId}/move")]
-        public Task<ActionResult> MoveGif(string gifId)
+        [HttpPut("{gifId}/move/{destCategoryId}")]
+        public async Task<ActionResult> MoveGif(string gifId, string destCategoryId)
         {
+            if (!FbDbHelper.IsValidKey(gifId)) return BadRequest();
+            if (!FbDbHelper.IsValidKey(destCategoryId)) return BadRequest();
+
             string username = User.GetUsername();
-            return MoveGif(gifId, username, username, true);
-        }
-
-        [HttpPut("{gifId}/move/{categoryId}")]
-        public Task<ActionResult> MoveGif(string gifId, string destCategoryId)
-        {
-            return MoveGif(gifId, destCategoryId, User.GetUsername(), true);
-        }
-
-        public async Task<ActionResult> MoveGif(string gifId,
-            string destCategoryId, string username, bool checkDestCategoryId)
-        {
             Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
+
             bool hasSrcCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, meta.CategoryId);
             if (!hasSrcCategory) return NotFound();
 
-            if (checkDestCategoryId)
-            {
-                bool hasDestCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, destCategoryId);
-                if (!hasDestCategory) return NotFound();
-            }
+            bool hasDestCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, destCategoryId);
+            if (!hasDestCategory) return NotFound();
 
             await FbDbHelper.Client.CategoryGifQuery(meta.CategoryId, gifId).DeleteAsync();
             await FbDbHelper.Client.GifCategroyQuery(gifId).PutAsync<string>(destCategoryId);
@@ -184,6 +171,8 @@ namespace GifGenerator.Controllers
         [HttpDelete("{gifId}")]
         public async Task<ActionResult> DeleteGif(string gifId)
         {
+            if (!FbDbHelper.IsValidKey(gifId)) return BadRequest();
+
             Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
             bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(User.GetUsername(), meta.CategoryId);
 

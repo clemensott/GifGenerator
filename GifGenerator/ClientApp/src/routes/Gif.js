@@ -16,12 +16,14 @@ export default class Gif extends DataCacheBase {
         const {gifId, categoryId} = this.getCurrentData();
         let path = null;
         let siblings = null;
-        if (typeof categoryId === 'string') {
+        if (categoryId) {
             path = getPathFromCache(this.props.cache.categories, categoryId, true);
             siblings = this.props.cache.categoryData[categoryId] &&
                 this.props.cache.categoryData[categoryId].gifs.filter(gif => gif.id !== gifId);
         }
 
+        const currentCategoryName = this.props.cache.categories[categoryId] && this.props.cache.categories[categoryId].name;
+        if (currentCategoryName) document.title = `GIF - ${currentCategoryName}`; 
 
         return (
             <div>
@@ -53,7 +55,7 @@ export default class Gif extends DataCacheBase {
     async checkData() {
         const {gifId, categoryId} = this.getCurrentData();
         const promises = [this.checkGif(gifId)];
-        if (typeof categoryId === 'string') {
+        if (categoryId) {
             promises.push(this.checkUpdateCategory(categoryId));
             promises.push(this.checkUpdatePath(categoryId));
         }

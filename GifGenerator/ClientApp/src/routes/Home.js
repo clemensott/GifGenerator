@@ -157,6 +157,6 @@ export default class Home extends DataCacheBase {
     }
 
     getCurrentCategoryId() {
-        return this.props.match.params.categoryId || '';
+        return this.props.match.params.categoryId || (this.props.data.user && this.props.data.user.rootCategoryId);
     }
 }
