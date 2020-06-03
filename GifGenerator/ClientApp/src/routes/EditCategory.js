@@ -1,9 +1,11 @@
 ﻿import React from 'react';
-import Navbar from "../components/Navbar";
 import {Redirect} from "react-router-dom";
 import DataCacheBase from "./DataCacheBase";
-import {Swal} from "../helper/swal";
 import getPathFromCache from "../helper/getPathFromCache";
+import {app} from "../App";
+import {swal} from "../components/Swal";
+import addCategory from "../helper/addCategory";
+import {getLoggedInNav} from "../helper/defaultNav";
 
 export default class EditCategory extends DataCacheBase {
     constructor(props) {
@@ -42,8 +44,8 @@ export default class EditCategory extends DataCacheBase {
 
             if (response.ok) {
                 const category = await response.json();
-                this.props.cache.categoryData[categoryId] = category;
-                this.props.cache.categories[category.id].name = newName;
+                app.cache.categoryData[categoryId] = category;
+                app.cache.categories[category.id].name = newName;
                 this.setState({
                     isLoading: false,
                     changeNameSuccessfully: true,
@@ -67,9 +69,9 @@ export default class EditCategory extends DataCacheBase {
     }
 
     deleteCategoryFromCache(categoryId) {
-        const category = this.props.cache.categoryData[categoryId];
+        const category = app.cache.categoryData[categoryId];
         if (category) {
-            const parentCategory = this.props.cache.categoryData[category.parentId];
+            const parentCategory = app.cache.categoryData[category.parentId];
             if (parentCategory) {
                 for (let i = parentCategory.children.length - 1; i >= 0; i--) {
                     if (parentCategory.children[i].id === categoryId) parentCategory.children.splice(i, 1);
@@ -80,20 +82,20 @@ export default class EditCategory extends DataCacheBase {
         const categoryIds = [categoryId];
         while (categoryIds.length > 0) {
             const deleteCategoryId = categoryIds.shift();
-            const deleteCategory = this.props.cache.categoryData[deleteCategoryId];
+            const deleteCategory = app.cache.categoryData[deleteCategoryId];
 
             if (!deleteCategory) continue;
 
             deleteCategory.children.forEach(child => categoryIds.push(child.id));
             deleteCategory.gifs.forEach(gif => delete this.props.data.gifs[gif.id]);
 
-            delete this.props.cache.categoryData[deleteCategoryId];
-            delete this.props.cache.categories[deleteCategoryId];
+            delete app.cache.categoryData[deleteCategoryId];
+            delete app.cache.categories[deleteCategoryId];
         }
     }
 
     async deleteCategory() {
-        const result = await new Swal({
+        const result = await swal.show({
             title: 'Are you sure you?',
             text: 'You are deleting all gifs and sub categories. Once deleted, you will not be able to recover all of this!',
             icon: 'fa-exclamation-triangle',
@@ -105,7 +107,7 @@ export default class EditCategory extends DataCacheBase {
                 type: 'primary',
                 text: 'Cancel',
             }],
-        }).show();
+        });
         if (result.type !== 'danger') return;
 
         const categoryId = this.getCurrentCategoryId();
@@ -130,54 +132,43 @@ export default class EditCategory extends DataCacheBase {
         if (this.state.redirectToHome) return <Redirect to="/"/>
 
         const categoryId = this.getCurrentCategoryId();
-        const customIcons = [{
-            title: 'Edit category',
-            href: `/edit/${categoryId}`,
-            icon: 'fa-edit',
-        }];
-        const path = getPathFromCache(this.props.cache.categories, categoryId, true);
-
-        const currentCategoryName = this.props.cache.categories[categoryId] && this.props.cache.categories[categoryId].name;
+        const currentCategoryName = app.cache.categories[categoryId] && app.cache.categories[categoryId].name;
         if (currentCategoryName) document.title = `GIFs - Edit - ${currentCategoryName}`;
 
-        const isRootCategory = this.props.data.user && categoryId === this.props.data.user.rootCategoryId;
+        const hideDeleteButton = !app.data.user || app.data.user.rootCategoryId === categoryId;
 
         return (
-            <div className="flex-container">
-                <Navbar path={path} customIcons={customIcons}/>
-
-                <div className="container content-container pt-4">
-                    <div className={this.state.isLoading ? 'd-none' : ''}>
-                        <div className="form-group">
-                            <label>New name:</label>
-                            <input ref={this.newNameRef} type="text"
-                                   className="form-control" placeholder="Enter new name"/>
-                        </div>
-
-                        <div className={`alert alert-danger  ${this.state.changeNameError ? '' : 'd-none'}`}
-                             role="alert">
-                            {this.state.changeNameError}
-                        </div>
-
-                        <div className={`alert alert-success  ${this.state.changeNameSuccessfully ? '' : 'd-none'}`}
-                             role="alert">
-                            Name changed successfully.
-                        </div>
-
-                        <button className="btn bg-primary text-light float-left"
-                                onClick={async () => await this.changeName()}>
-                            Change name
-                        </button>
-
-                        <button className={`btn bg-danger text-light float-right ${isRootCategory ? 'd-none' : ''}`}
-                                onClick={async () => await this.deleteCategory()}>
-                            Delete Category
-                        </button>
-
+            <div className="pt-2">
+                <div className={this.state.isLoading ? 'd-none' : ''}>
+                    <div className="form-group">
+                        <label>New name:</label>
+                        <input ref={this.newNameRef} type="text"
+                               className="form-control" placeholder="Enter new name"/>
                     </div>
-                    <div className={`center ${this.state.isLoading ? '' : 'd-none'}`}>
-                        <div className="spinner-border text-primary"/>
+
+                    <div className={`alert alert-danger  ${this.state.changeNameError ? '' : 'd-none'}`}
+                         role="alert">
+                        {this.state.changeNameError}
                     </div>
+
+                    <div className={`alert alert-success  ${this.state.changeNameSuccessfully ? '' : 'd-none'}`}
+                         role="alert">
+                        Name changed successfully.
+                    </div>
+
+                    <button className="btn bg-primary text-light float-left"
+                            onClick={async () => await this.changeName()}>
+                        Change name
+                    </button>
+
+                    <button className={`btn bg-danger text-light float-right ${hideDeleteButton ? 'd-none' : ''}`}
+                            onClick={async () => await this.deleteCategory()}>
+                        Delete Category
+                    </button>
+
+                </div>
+                <div className={`center ${this.state.isLoading ? '' : 'd-none'}`}>
+                    <div className="spinner-border text-primary"/>
                 </div>
             </div>
         );
@@ -193,7 +184,27 @@ export default class EditCategory extends DataCacheBase {
         await this.checkUpdatePath(this.getCurrentCategoryId())
     }
 
+    getNavProps() {
+        const categoryId = this.getCurrentCategoryId();
+        return getLoggedInNav(
+            getPathFromCache(app.cache.categories, categoryId, true),
+            [{
+                title: 'Add GIF',
+                href: `/gif/create/${categoryId}`,
+                icon: 'fa-plus',
+            }, {
+                title: 'Add category',
+                onClick: () => addCategory(categoryId),
+                icon: 'fa-folder-plus',
+            }, {
+                title: 'Edit category',
+                href: `/edit/${categoryId}`,
+                icon: 'fa-edit',
+            }]
+        );
+    }
+
     getCurrentCategoryId() {
-        return this.props.match.params.categoryId || (this.props.data.user && this.props.data.user.rootCategoryId);
+        return this.props.match.params.categoryId || (app.data.user && app.data.user.rootCategoryId);
     }
 }

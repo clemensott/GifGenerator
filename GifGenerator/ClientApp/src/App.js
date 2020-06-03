@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Route, Switch} from 'react-router-dom';
+import {Redirect, Route, Switch} from 'react-router-dom';
 import Login from "./routes/Login";
 import Logout from "./routes/Logout";
 import Home from "./routes/Home";
@@ -8,9 +8,14 @@ import SignUp from "./routes/SignUp";
 import EditAccount from "./routes/EditAccount";
 import EditCategory from "./routes/EditCategory";
 import {getCookieValue} from "./helper/cookies";
-import Swal from "./components/Swal";
-import {addOnShowSwalListener, removeOnShowSwalListener} from "./helper/swal";
+import {Swal} from "./components/Swal";
 import CreateGif from "./routes/CreateGif";
+import {Navbar} from "./components/Navbar";
+
+export const app = {
+    data: null,
+    cache: null,
+};
 
 export default class App extends Component {
     displayName = App.name
@@ -18,51 +23,73 @@ export default class App extends Component {
     constructor(props) {
         super(props);
 
-        this.cache = {
+        this.state = {
+            authToken: getCookieValue('auth'),
+            user: null,
+        }
+
+        app.data = this.state;
+        app.cache = {
             categoryData: {},
             categories: {},
             gifs: {},
         }
+    }
 
-        this.state = {
-            authToken: getCookieValue('auth'),
-            user: null,
-            swal: null,
-        }
+    setState(state, callback) {
+        app.data = state;
+        super.setState(state, callback);
+    }
 
-        this.onShowSwalListener = this.onShowSwalListener.bind(this);
-        this.onSwalResolveListener = this.onSwalResolveListener.bind(this);
+    renderLoggedOutRouting() {
+        return (
+            <Switch>
+                <Route path='/login' render={(props) => <Login {...props} data={this.state}/>}/>
+                <Route path='/signup' render={(props) => <SignUp {...props} data={this.state}/>}/>
+                <Route path='/' render={() => <Redirect to="/login"/>}/>
+            </Switch>
+        )
+    }
+
+    renderLoggedInRouting() {
+        return (
+            <Switch>
+                <Route path='/logout' render={(props) => <Logout {...props}/>}/>
+                <Route path='/account/edit'
+                       render={(props) => <EditAccount {...props} />}/>
+                <Route path='/edit/:categoryId'
+                       render={(props) => <EditCategory {...props} data={this.state} cache={this.cache}/>}/>
+                <Route path='/gif/create/:categoryId'
+                       render={(props) => <CreateGif {...props} data={this.state} cache={this.cache}/>}/>
+                <Route path='/gif/:gifId'
+                       render={(props) => <Gif {...props} data={this.state} cache={this.cache}/>}/>
+                <Route path='/:categoryId'
+                       render={(props) => <Home {...props} />}/>
+                <Route exact path='/' render={(props) => <Home {...props} data={this.state} cache={this.cache}/>}/>
+                <Route path='/' render={() => <Redirect to="/"/>}/>
+            </Switch>
+        )
     }
 
     render() {
         const authToken = getCookieValue('auth');
-        if (authToken !== this.state.authToken) this.setState({authToken});
+        if (authToken !== this.state.authToken) this.state.authToken = authToken;
 
         return (
-            <div>
-                <Switch>
-                    <Route path='/login' render={(props) => <Login {...props} data={this.state}/>}/>
-                    <Route path='/logout' render={(props) => <Logout {...props} data={this.state}/>}/>
-                    <Route path='/signup' render={(props) => <SignUp {...props} data={this.state}/>}/>
-                    <Route path='/account/edit'
-                           render={(props) => <EditAccount {...props} data={this.state} cache={this.cache}/>}/>
-                    <Route path='/edit/:categoryId'
-                           render={(props) => <EditCategory {...props} data={this.state} cache={this.cache}/>}/>
-                    <Route path='/gif/create/:categoryId'
-                           render={(props) => <CreateGif {...props} data={this.state} cache={this.cache}/>}/>
-                    <Route path='/gif/:gifId'
-                           render={(props) => <Gif {...props} data={this.state} cache={this.cache}/>}/>
-                    <Route path='/:categoryId'
-                           render={(props) => <Home {...props} data={this.state} cache={this.cache}/>}/>
-                    <Route path='/' render={(props) => <Home {...props} data={this.state} cache={this.cache}/>}/>
-                </Switch>
-                <Swal {...this.state.swal}/>
+            <div className="flex-container">
+                <Navbar/>
+
+                <div className="container content-container">
+                    {authToken ?
+                        this.renderLoggedInRouting() :
+                        this.renderLoggedOutRouting()}
+                    <Swal/>
+                </div>
             </div>
         );
     }
 
     async componentDidMount() {
-        addOnShowSwalListener(this.onShowSwalListener);
         await this.checkUser();
     }
 
@@ -78,24 +105,5 @@ export default class App extends Component {
                 console.log(e);
             }
         }
-    }
-
-    componentWillUnmount() {
-        removeOnShowSwalListener(this.onShowSwalListener);
-    }
-
-    onShowSwalListener(swal) {
-        if (this.state.swal) {
-            this.state.swal.removeOnResolveListener(this.onSwalResolveListener);
-            this.state.swal.resolve('cancel');
-        }
-
-        swal.addOnResolveListener(this.onSwalResolveListener);
-        this.setState({swal});
-    }
-
-    onSwalResolveListener() {
-        this.state.swal.removeOnResolveListener(this.onSwalResolveListener);
-        this.setState({swal: null});
     }
 }

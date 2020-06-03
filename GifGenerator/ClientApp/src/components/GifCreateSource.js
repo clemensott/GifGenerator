@@ -2,8 +2,8 @@
 import GifSourcePreview from "./GifSourcePreview";
 import './GifCreateSource.css'
 import {sourceMediaTypes} from "../constants";
-import {Swal} from "../helper/swal";
 import cropping from "../helper/cropping";
+import {swal} from "./Swal";
 
 const dataSource = {
     url: 'URL',
@@ -155,23 +155,23 @@ export default class GifCreateSource extends Component {
             const fileSourceType = Object.values(sourceMediaTypes)
                 .find(type => type.mediaType === file.type);
             if (!file.type) {
-                await new Swal({
+                await swal.show({
                     title: 'Unknown file type',
                     icon: 'fa-exclamation-triangle',
                     color: 'warning',
                     text: `The type may not be supported.`,
                     buttons: 'Ok',
-                }).show();
+                });
             } else if (!fileSourceType) {
-                await new Swal({
+                await swal.show({
                     title: 'Unsupported file type',
                     icon: 'fa-exclamation-triangle',
                     color: 'warning',
                     text: `The type '${file.type}' may not be supported.`,
                     buttons: 'Ok',
-                }).show();
+                });
             } else if (fileSourceType.value !== this.props.source.type) {
-                const result = await new Swal({
+                const result = await swal.show({
                     title: 'Wrong file type',
                     icon: 'fa-question-circle',
                     color: 'warning',
@@ -183,7 +183,7 @@ export default class GifCreateSource extends Component {
                         type: 'secondary',
                         text: 'No',
                     }],
-                }).show();
+                });
 
                 if (result.type === 'primary') {
                     this.props.source.type = this.typeRef.current.value = fileSourceType.value;
@@ -230,7 +230,7 @@ export default class GifCreateSource extends Component {
     }
 
     autoFit() {
-        const {x, y, width, height} = cropping.getFitRect(this.state.previewSize.width, 
+        const {x, y, width, height} = cropping.getFitRect(this.state.previewSize.width,
             this.state.previewSize.height, this.props.targetWidth, this.props.targetHeight);
         this.setValue(this.inputConfigs.x, x);
         this.setValue(this.inputConfigs.y, y);
@@ -304,7 +304,7 @@ export default class GifCreateSource extends Component {
                     <select ref={this.typeRef} className="form-control" defaultValue={this.props.source.type}
                             name="type"
                             onChange={e => {
-                                this.props.source.type = parseInt(e.target.value);
+                                this.props.source.type = parseInt(e.target.value, 10);
                                 this.setState({lastValidated: e.target.name});
                             }}>
                         {typeOptions}

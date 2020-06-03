@@ -19,6 +19,11 @@
     display: inline;
 }
 
+.nav-btn {
+    display: inline;
+    vertical-align: bottom;
+}
+
 .nav-click {
     display: inline;
     color: #007bff;

@@ -1,11 +1,13 @@
 ﻿import React from 'react';
-import Navbar from "../components/Navbar";
 import {Redirect,} from "react-router-dom";
 import DataCacheBase from "./DataCacheBase";
-import {Swal} from "../helper/swal";
 import getPathFromCache from "../helper/getPathFromCache";
 import GifCreateSource from "../components/GifCreateSource";
 import './CreateGif.css'
+import {app} from "../App";
+import {swal} from "../components/Swal";
+import addCategory from "../helper/addCategory";
+import {getLoggedInNav} from "../helper/defaultNav";
 
 export default class CreateGif extends DataCacheBase {
     constructor(props) {
@@ -78,25 +80,25 @@ export default class CreateGif extends DataCacheBase {
                 this.setState({previewUrl, isLoading: false});
             } else {
                 this.setState({isLoading: false});
-                await new new Swal({
+                await swal.show({
                     title: 'Error',
                     icon: 'fa-times',
                     color: 'danger',
                     text: `Status code: ${response.status}`,
                     textSecondary: response.statusText,
                     buttons: 'Ok',
-                }).show();
+                });
             }
         } catch (e) {
             this.setState({isLoading: false});
             console.log(e);
-            await new new Swal({
+            await swal.show({
                 title: 'Exception',
                 icon: 'fa-times',
                 color: 'danger',
                 text: e.message,
                 buttons: 'Ok',
-            }).show();
+            });
         }
     }
 
@@ -119,25 +121,25 @@ export default class CreateGif extends DataCacheBase {
                 this.setState({redirect: `/gif/${gifId}`});
             } else {
                 this.setState({isLoading: false});
-                await new new Swal({
+                await swal.show({
                     title: 'Error',
                     icon: 'fa-times',
                     color: 'danger',
                     text: `Status code: ${response.status}`,
                     textSecondary: response.statusText,
                     buttons: 'Ok',
-                }).show();
+                });
             }
         } catch (e) {
             this.setState({isLoading: false});
             console.log(e);
-            await new new Swal({
+            await swal.show({
                 title: 'Exception',
                 icon: 'fa-times',
                 color: 'danger',
                 text: e.message,
                 buttons: 'Ok',
-            }).show();
+            });
         }
     }
 
@@ -182,96 +184,82 @@ export default class CreateGif extends DataCacheBase {
         if (this.state.redirect) return <Redirect to={this.state.redirect}/>
 
         const categoryId = this.getCurrentCategoryId();
-        const customIcons = [{
-            title: 'Add GIF',
-            href: `/gif/create/${categoryId}`,
-            icon: 'fa-plus',
-        }, {
-            title: 'Edit category',
-            href: `/edit/${categoryId}`,
-            icon: 'fa-edit',
-        }];
-        const path = getPathFromCache(this.props.cache.categories, categoryId, true);
         const sources = this.create.sources.map((source, index) => this.renderSource(source, index));
 
-        const currentCategoryName = this.props.cache.categories[categoryId] && this.props.cache.categories[categoryId].name;
+        const currentCategoryName = app.cache.categories[categoryId] && app.cache.categories[categoryId].name;
         if (currentCategoryName) document.title = `Add GIF - ${currentCategoryName}`;
 
         return (
-            <div className="flex-container">
-                <Navbar path={path} customIcons={customIcons}/>
-
-                <div className="container content-container pt-4 pb-3">
-                    <div className={this.state.isLoading ? 'd-none' : ''}>
-                        <div className="form-row">
-                            <div className="form-group col-md-4">
-                                <label><strong>Width</strong> (*)</label>
-                                <input type="number" className="form-control"
-                                       defaultValue={this.create.size.width} min="1" max="3000"
-                                       onBlur={e => {
-                                           this.create.size.width = parseInt(e.target.value, 10);
-                                           this.setState({lastUpdated: 'width'});
-                                       }}/>
-                            </div>
-                            <div className="form-group col-md-4">
-                                <label><strong>Height</strong> (*)</label>
-                                <input type="number" className="form-control" defaultValue={this.create.size.height}
-                                       min="1" max="3000" onBlur={e => {
-                                    this.create.size.height = parseInt(e.target.value, 10);
-                                    this.setState({lastUpdated: 'height'});
-                                }}/>
-                            </div>
-                            <div className="form-group col-md-4">
-                                <label>Repeat count</label>
-                                <input type="text" className="form-control" min="1"
-                                       defaultValue={this.create.repeatCount || ''}
-                                       onBlur={e => this.create.repeatCount = parseInt(e.target.value, 10) || 65536}/>
-                            </div>
+            <div className="pt-3 pb-3">
+                <div className={this.state.isLoading ? 'd-none' : ''}>
+                    <div className="form-row">
+                        <div className="form-group col-md-4">
+                            <label><strong>Width</strong> (*)</label>
+                            <input type="number" className="form-control"
+                                   defaultValue={this.create.size.width} min="1" max="3000"
+                                   onBlur={e => {
+                                       this.create.size.width = parseInt(e.target.value, 10);
+                                       this.setState({lastUpdated: 'width'});
+                                   }}/>
                         </div>
-
-                        {sources}
-
-                        <div className="clearfix">
-                            <button className="btn btn-outline-primary float-right ml-2"
-                                    onClick={async () => {
-                                        this.create.sources.push(this.getSourceTemplate());
-                                        this.setState({lastUpdated: 'source'});
-                                    }}>
-                                Add source
-                            </button>
+                        <div className="form-group col-md-4">
+                            <label><strong>Height</strong> (*)</label>
+                            <input type="number" className="form-control" defaultValue={this.create.size.height}
+                                   min="1" max="3000" onBlur={e => {
+                                this.create.size.height = parseInt(e.target.value, 10);
+                                this.setState({lastUpdated: 'height'});
+                            }}/>
                         </div>
-
-                        <div className={`text-center p-2 ${this.state.previewUrl ? '' : 'd-none'}`}>
-                            <img src={this.state.previewUrl} alt="None" className="add-gif-source-preview-img"/>
-                        </div>
-
-                        <div className="form-group pt-2">
-                            <label className="form-check-label">
-                                <strong>
-                                    * Mandatory
-                                </strong>
-                            </label>
-                        </div>
-
-                        <div className="form-row">
-                            <button className="btn btn-primary float-left"
-                                    onClick={() => this.addGif()}>
-                                Add
-                            </button>
-
-                            <button className="btn btn-secondary float-left ml-2"
-                                    onClick={() => this.loadPreview()}>
-                                Preview
-                            </button>
+                        <div className="form-group col-md-4">
+                            <label>Repeat count</label>
+                            <input type="text" className="form-control" min="1"
+                                   defaultValue={this.create.repeatCount || ''}
+                                   onBlur={e => this.create.repeatCount = parseInt(e.target.value, 10) || 65536}/>
                         </div>
                     </div>
 
-                    <div className={`center ${this.state.isLoading ? '' : 'd-none'}`}>
-                        <div>
-                            <div className="spinner-border text-primary"/>
-                        </div>
-                        <label>{this.state.loadingStatus}</label>
+                    {sources}
+
+                    <div className="clearfix">
+                        <button className="btn btn-outline-primary float-right ml-2"
+                                onClick={async () => {
+                                    this.create.sources.push(this.getSourceTemplate());
+                                    this.setState({lastUpdated: 'source'});
+                                }}>
+                            Add source
+                        </button>
                     </div>
+
+                    <div className={`text-center p-2 ${this.state.previewUrl ? '' : 'd-none'}`}>
+                        <img src={this.state.previewUrl} alt="None" className="add-gif-source-preview-img"/>
+                    </div>
+
+                    <div className="form-group pt-2">
+                        <label className="form-check-label">
+                            <strong>
+                                * Mandatory
+                            </strong>
+                        </label>
+                    </div>
+
+                    <div className="form-row pl-2">
+                        <button className="btn btn-primary float-left"
+                                onClick={() => this.addGif()}>
+                            Add
+                        </button>
+
+                        <button className="btn btn-secondary float-left ml-2"
+                                onClick={() => this.loadPreview()}>
+                            Preview
+                        </button>
+                    </div>
+                </div>
+
+                <div className={`center ${this.state.isLoading ? '' : 'd-none'}`}>
+                    <div>
+                        <div className="spinner-border text-primary"/>
+                    </div>
+                    <label>{this.state.loadingStatus}</label>
                 </div>
             </div>
         );
@@ -287,7 +275,27 @@ export default class CreateGif extends DataCacheBase {
         await this.checkUpdatePath(this.getCurrentCategoryId())
     }
 
+    getNavProps() {
+        const categoryId = this.getCurrentCategoryId();
+        return getLoggedInNav(
+            getPathFromCache(app.cache.categories, categoryId, true),
+            [{
+                title: 'Add GIF',
+                href: `/gif/create/${categoryId}`,
+                icon: 'fa-plus',
+            }, {
+                title: 'Add category',
+                onClick: () => addCategory(categoryId),
+                icon: 'fa-folder-plus',
+            }, {
+                title: 'Edit category',
+                href: `/edit/${categoryId}`,
+                icon: 'fa-edit',
+            }],
+        );
+    }
+
     getCurrentCategoryId() {
-        return this.props.match.params.categoryId || (this.props.data.user && this.props.data.user.rootCategoryId);
+        return this.props.match.params.categoryId || (app.data.user && app.data.user.rootCategoryId);
     }
 }

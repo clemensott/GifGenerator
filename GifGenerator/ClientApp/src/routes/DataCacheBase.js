@@ -1,7 +1,8 @@
-﻿import {Component} from "react";
-import {withRouter} from "react-router-dom";
+﻿import React from "react";
+import {app} from "../App";
+import RouteBase from "./RouteBase";
 
-export default class DataCacheBase extends Component {
+export default class DataCacheBase extends RouteBase {
     constructor(props) {
         super(props);
 
@@ -19,6 +20,7 @@ export default class DataCacheBase extends Component {
     }
 
     componentDidMount() {
+        super.componentDidMount();
         this.isComponentMounted = true;
     }
 
@@ -45,7 +47,7 @@ export default class DataCacheBase extends Component {
             if (response.ok) {
                 const path = await response.json();
                 path.reduce((last, current) => {
-                    this.props.cache.categories[current.id] = {
+                    app.cache.categories[current.id] = {
                         id: current.id,
                         name: current.name,
                         parentId: last ? last.id : null,
@@ -80,21 +82,21 @@ export default class DataCacheBase extends Component {
             if (response.ok) {
                 const category = await response.json();
 
-                this.props.cache.categoryData[categoryId] = category;
-                this.props.cache.categories[category.id] = {
+                app.cache.categoryData[categoryId] = category;
+                app.cache.categories[category.id] = {
                     id: category.id || '',
                     name: category.name,
                     parentId: category.parentId,
                 }
                 category.children.forEach(child => {
-                    this.props.cache.categories[child.id] = {
+                    app.cache.categories[child.id] = {
                         id: child.id || '',
                         name: child.name,
                         parentId: category.id || '',
                     }
                 });
                 category.gifs.forEach(child => {
-                    this.props.cache.gifs[child.id] = {...child};
+                    app.cache.gifs[child.id] = {...child};
                 });
 
                 if (categoryId === this.fetchCategoryId) {
@@ -124,7 +126,7 @@ export default class DataCacheBase extends Component {
             const response = await fetch(`/api/gif/${gifId}/meta`);
 
             if (response.ok) {
-                this.props.cache.gifs[gifId] = await response.json();
+                app.cache.gifs[gifId] = await response.json();
                 this.setState({
                     lastFetchGifId: gifId,
                 });

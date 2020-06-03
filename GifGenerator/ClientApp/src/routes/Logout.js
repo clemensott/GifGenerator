@@ -1,7 +1,10 @@
-﻿import React, {Component} from 'react';
+﻿import React from 'react';
 import {Redirect} from "react-router-dom";
+import {app} from "../App";
+import RouteBase from "./RouteBase";
+import {getLoggedOutNav} from "../helper/defaultNav";
 
-export default class Logout extends Component {
+export default class Logout extends RouteBase {
     constructor(props) {
         super(props);
 
@@ -21,6 +24,8 @@ export default class Logout extends Component {
     }
 
     async componentDidMount() {
+        super.componentDidMount();
+
         try {
             await fetch('/api/auth/logout', {
                 method: 'POST',
@@ -37,7 +42,11 @@ export default class Logout extends Component {
     }
 
     deleteAllCachedData() {
-        this.props.data.user = null;
+        app.data.user = null;
         document.cookie = "";
+    }
+
+    getNavProps() {
+        return getLoggedOutNav();
     }
 }

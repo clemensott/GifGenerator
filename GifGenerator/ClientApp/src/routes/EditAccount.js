@@ -1,6 +1,7 @@
 ﻿import React from 'react';
-import Navbar from "../components/Navbar";
 import DataCacheBase from "./DataCacheBase";
+import {app} from "../App";
+import {getLoggedInNav} from "../helper/defaultNav";
 
 export default class EditAccount extends DataCacheBase {
     constructor(props) {
@@ -74,70 +75,51 @@ export default class EditAccount extends DataCacheBase {
         }
     }
 
-    getPath() {
-        if (!this.props.data.user) return null;
-        const rootCategory = this.props.cache.categories[this.props.data.user.rootCategoryId];
-        if (!rootCategory) return null;
-        return {
-            links: [{
-                href: `/${rootCategory.id}`,
-                text: rootCategory.name,
-            }],
-        }
-    }
-
     render() {
-        document.title = 'GIFs - Edit Account';
-
-        const path = this.getPath();
         return (
-            <div className="flex-container">
-                <Navbar path={path}/>
-
-                <div className="container content-container pt-4">
-                    <div className={this.state.isChangingPassword ? 'd-none' : ''}>
-                        <div className="form-group">
-                            <label>New password:</label>
-                            <input ref={this.newPasswordRef} type="password"
-                                   className="form-control" placeholder="Enter new password"/>
-                        </div>
-                        <div className="form-group">
-                            <label>Repeat new password:</label>
-                            <input ref={this.repeatPasswordRef} type="password" placeholder="Enter new password again"
-                                   className="form-control"/>
-                        </div>
-
-                        <div className={`form-group form-check  ${this.state.passwordDiffer ? '' : 'd-none'}`}>
-                            <label className="form-check-label">
-                                <input className="is-invalid d-none"/>
-                                <div className="invalid-feedback">New passwords do not match.</div>
-                            </label>
-                        </div>
-
-                        <div className={`form-group form-check  ${this.state.error ? '' : 'd-none'}`}>
-                            <label className="form-check-label">
-                                <input className="is-invalid d-none"/>
-                                <div className="invalid-feedback">{this.state.error}</div>
-                            </label>
-                        </div>
-
-                        <div
-                            className={`form-group form-check  ${this.state.changePasswordSuccessfully ? '' : 'd-none'}`}>
-                            <label className="form-check-label">
-                                <input className="is-valid d-none"/>
-                                <div className="valid-feedback">Password changed successfully.</div>
-                            </label>
-                        </div>
-
-                        <button className="btn bg-primary text-light"
-                                onClick={async () => await this.changePassword()}>
-                            Change Password
-                        </button>
+            <div className="pt-2">
+                <div className={this.state.isChangingPassword ? 'd-none' : ''}>
+                    <div className="form-group">
+                        <label>New password:</label>
+                        <input ref={this.newPasswordRef} type="password"
+                               className="form-control" placeholder="Enter new password"/>
+                    </div>
+                    <div className="form-group">
+                        <label>Repeat new password:</label>
+                        <input ref={this.repeatPasswordRef} type="password" placeholder="Enter new password again"
+                               className="form-control"/>
                     </div>
 
-                    <div className={`center ${this.state.isChangingPassword ? '' : 'd-none'}`}>
-                        <div className="spinner-border text-primary"/>
+                    <div className={`form-group form-check  ${this.state.passwordDiffer ? '' : 'd-none'}`}>
+                        <label className="form-check-label">
+                            <input className="is-invalid d-none"/>
+                            <div className="invalid-feedback">New passwords do not match.</div>
+                        </label>
                     </div>
+
+                    <div className={`form-group form-check  ${this.state.error ? '' : 'd-none'}`}>
+                        <label className="form-check-label">
+                            <input className="is-invalid d-none"/>
+                            <div className="invalid-feedback">{this.state.error}</div>
+                        </label>
+                    </div>
+
+                    <div
+                        className={`form-group form-check  ${this.state.changePasswordSuccessfully ? '' : 'd-none'}`}>
+                        <label className="form-check-label">
+                            <input className="is-valid d-none"/>
+                            <div className="valid-feedback">Password changed successfully.</div>
+                        </label>
+                    </div>
+
+                    <button className="btn bg-primary text-light"
+                            onClick={async () => await this.changePassword()}>
+                        Change Password
+                    </button>
+                </div>
+
+                <div className={`center ${this.state.isChangingPassword ? '' : 'd-none'}`}>
+                    <div className="spinner-border text-primary"/>
                 </div>
             </div>
         );
@@ -145,14 +127,29 @@ export default class EditAccount extends DataCacheBase {
 
     async componentDidMount() {
         super.componentDidMount();
+        document.title = 'GIFs - Edit Account';
         await this.checkRootCategory();
     }
 
     async componentDidUpdate() {
+        super.componentDidUpdate();
         await this.checkRootCategory();
     }
 
     async checkRootCategory() {
-        if (this.props.data.user) await this.checkUpdatePath(this.props.data.user.rootCategoryId);
+        if (app.data.user) await this.checkUpdatePath(app.data.user.rootCategoryId);
+    }
+
+    getNavProps() {
+        return getLoggedInNav(this.getPath());
+    }
+
+    getPath() {
+        return {
+            links: [{
+                href: `/${app.data.user && app.data.user.rootCategoryId || ''}`,
+                text: 'GIFs',
+            }],
+        }
     }
 }

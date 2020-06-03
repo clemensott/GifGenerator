@@ -1,12 +1,14 @@
-﻿import React, {Component} from 'react';
-import {Link} from "react-router-dom";
+﻿import React from 'react';
+import {app} from "../App";
+import {getLoggedOutNav} from "../helper/defaultNav";
+import RouteBase from "./RouteBase";
 
-export default class SignUp extends Component {
+export default class SignUp extends RouteBase {
     constructor(props) {
         super(props);
 
         this.state = {
-            username: 'clemens',
+            username: '',
             passwordDiffer: false,
             isLoggingIn: false,
             errors: null,
@@ -51,7 +53,7 @@ export default class SignUp extends Component {
             });
 
             if (response.ok) {
-                this.props.data.user.username = username;
+                app.data.user.username = username;
 
                 this.props.history.push('/login');
             } else {
@@ -81,49 +83,43 @@ export default class SignUp extends Component {
         }
 
         return (
-            <div className="flex-container">
-                <div className="form-border"/>
-                <div className="container form-content p-3 rounded">
-                    <div className="form-group">
-                        <label>Username:</label>
-                        <input ref={this.usernameRef} type="text" defaultValue={this.state.username}
-                               className="form-control" placeholder="Enter username"/>
-                    </div>
-                    <div className="form-group">
-                        <label>Password:</label>
-                        <input ref={this.passwordRef} type="password"
-                               className="form-control" placeholder="Enter password"/>
-                    </div>
-                    <div className="form-group">
-                        <label>Repeat password:</label>
-                        <input ref={this.repeatRef} type="password" placeholder="Enter password again"
-                               className="form-control"/>
-
-                        <p className={`text-danger ${this.state.passwordDiffer ? '' : 'd-none'}`}>
-                            Passwords do not match.
-                        </p>
-                    </div>
-
-                    <div className={`form-group form-check  ${this.state.error ? '' : 'd-none'}`}>
-                        <label className="form-check-label">
-                            <input className="is-invalid d-none"/>
-                            <div className="invalid-feedback">{this.state.error}</div>
-                        </label>
-                    </div>
-
-                    <button className="btn bg-primary text-light float-left"
-                            onClick={async () => await this.signUp()}>
-                        Sign up
-                    </button>
-
-                    <Link to="/login">
-                        <button className="btn bg-secondary text-light float-right">
-                            Login
-                        </button>
-                    </Link>
+            <div className="pt-2">
+                <div className="form-group">
+                    <label>Username:</label>
+                    <input ref={this.usernameRef} type="text" defaultValue={this.state.username}
+                           className="form-control" placeholder="Enter username"/>
                 </div>
-                <div className="form-border"/>
+                <div className="form-group">
+                    <label>Password:</label>
+                    <input ref={this.passwordRef} type="password"
+                           className="form-control" placeholder="Enter password"/>
+                </div>
+                <div className="form-group">
+                    <label>Repeat password:</label>
+                    <input ref={this.repeatRef} type="password" placeholder="Enter password again"
+                           className="form-control"/>
+
+                    <p className={`text-danger ${this.state.passwordDiffer ? '' : 'd-none'}`}>
+                        Passwords do not match.
+                    </p>
+                </div>
+
+                <div className={`form-group form-check  ${this.state.error ? '' : 'd-none'}`}>
+                    <label className="form-check-label">
+                        <input className="is-invalid d-none"/>
+                        <div className="invalid-feedback">{this.state.error}</div>
+                    </label>
+                </div>
+
+                <button className="btn bg-primary text-light float-left"
+                        onClick={async () => await this.signUp()}>
+                    Sign up
+                </button>
             </div>
         );
+    }
+
+    getNavProps() {
+        return getLoggedOutNav();
     }
 }
