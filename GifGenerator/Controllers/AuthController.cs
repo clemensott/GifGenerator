@@ -12,25 +12,29 @@ namespace GifGenerator.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private static readonly TimeSpan maxCookieAge = TimeSpan.FromHours(1);
+        private static readonly TimeSpan minCookieAge = TimeSpan.FromHours(1), maxCookieAge = TimeSpan.FromDays(300);
 
         [HttpPost("login")]
-        public async Task<ActionResult<string>> LoginUser([FromBody] LoginBody body)
+        public async Task<ActionResult<LoginInfo>> LoginUser([FromBody] LoginBody body)
         {
             string password = await FbDbHelper.Client.GetUserPasswordAsync(body.Username);
 
             if (password == null || password != body.Password) return BadRequest();
 
-            string token = await FbDbHelper.Client.LoginAsync(body.Username);
+            Login login = new Login()
+            {
+                Username = body.Username,
+                Expires = DateTimeOffset.Now.Add(body.KeepLoggedIn ? maxCookieAge : minCookieAge),
+            };
+            string token = await FbDbHelper.Client.LoginAsync(login);
 
             Response.Cookies.Append(UserHelper.CookieName, token, new CookieOptions()
             {
-                HttpOnly = true,
-                Secure = true,
-                MaxAge = body.KeepLoggedIn ? (TimeSpan?)null : maxCookieAge
+                Path = "/",
+                Expires = login.Expires,
             });
 
-            return token;
+            return new LoginInfo(token, login.Expires);
         }
 
         [HttpPost("logout")]

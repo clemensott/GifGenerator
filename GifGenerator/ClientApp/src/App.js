@@ -24,8 +24,8 @@ export default class App extends Component {
         super(props);
 
         this.state = {
-            authToken: getCookieValue('auth'),
             user: null,
+            logout: false,
         }
 
         app.data = this.state;
@@ -44,8 +44,8 @@ export default class App extends Component {
     renderLoggedOutRouting() {
         return (
             <Switch>
-                <Route path='/login' render={(props) => <Login {...props} data={this.state}/>}/>
-                <Route path='/signup' render={(props) => <SignUp {...props} data={this.state}/>}/>
+                <Route path='/login' component={Login}/>
+                <Route path='/signup' component={SignUp}/>
                 <Route path='/' render={() => <Redirect to="/login"/>}/>
             </Switch>
         )
@@ -54,26 +54,32 @@ export default class App extends Component {
     renderLoggedInRouting() {
         return (
             <Switch>
-                <Route path='/logout' render={(props) => <Logout {...props}/>}/>
-                <Route path='/account/edit'
-                       render={(props) => <EditAccount {...props} />}/>
-                <Route path='/edit/:categoryId'
-                       render={(props) => <EditCategory {...props} data={this.state} cache={this.cache}/>}/>
-                <Route path='/gif/create/:categoryId'
-                       render={(props) => <CreateGif {...props} data={this.state} cache={this.cache}/>}/>
-                <Route path='/gif/:gifId'
-                       render={(props) => <Gif {...props} data={this.state} cache={this.cache}/>}/>
-                <Route path='/:categoryId'
-                       render={(props) => <Home {...props} />}/>
-                <Route exact path='/' render={(props) => <Home {...props} data={this.state} cache={this.cache}/>}/>
+                <Route path='/logout' component={Logout}/>
+                <Route path='/account/edit' component={EditAccount}/>
+                <Route path='/edit/:categoryId' component={EditCategory}/>
+                <Route path='/gif/create/:categoryId' component={CreateGif}/>
+                <Route path='/gif/:gifId' component={Gif}/>
+                <Route path='/:categoryId' component={Home}/>
+                <Route exact path='/' component={Home}/>
                 <Route path='/' render={() => <Redirect to="/"/>}/>
             </Switch>
         )
     }
 
     render() {
+        if (this.state.logout) {
+            this.state.logout = false;
+            return <Logout/>;
+        }
+
         const authToken = getCookieValue('auth');
-        if (authToken !== this.state.authToken) this.state.authToken = authToken;
+        if (this.state.user && authToken) {
+            return (
+                <div className="center">
+                    <div className="spinner-border text-primary"/>
+                </div>
+            );
+        }
 
         return (
             <div className="flex-container">
@@ -94,15 +100,19 @@ export default class App extends Component {
     }
 
     async checkUser() {
-        if (!this.state.user && this.state.authToken) {
+        const authToken = getCookieValue('auth');
+        if (!this.state.user && authToken) {
             try {
                 const response = await fetch('/api/user');
                 if (response.ok) {
                     const user = await response.json();
                     this.setState({user,});
+                } else {
+                    this.setState({logout: true});
                 }
             } catch (e) {
                 console.log(e);
+                this.setState({logout: true});
             }
         }
     }

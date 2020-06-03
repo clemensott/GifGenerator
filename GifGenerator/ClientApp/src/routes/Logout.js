@@ -3,6 +3,7 @@ import {Redirect} from "react-router-dom";
 import {app} from "../App";
 import RouteBase from "./RouteBase";
 import {getLoggedOutNav} from "../helper/defaultNav";
+import {deleteCookie} from "../helper/cookies";
 
 export default class Logout extends RouteBase {
     constructor(props) {
@@ -43,7 +44,7 @@ export default class Logout extends RouteBase {
 
     deleteAllCachedData() {
         app.data.user = null;
-        document.cookie = "";
+        deleteCookie('auth');
     }
 
     getNavProps() {

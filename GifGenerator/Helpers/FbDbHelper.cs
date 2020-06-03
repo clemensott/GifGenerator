@@ -123,15 +123,15 @@ namespace GifGenerator.Helpers
             return client.Child(LoginBaseChild).Child(token);
         }
 
-        public static Task<string> GetLoginUsernameAsync(this FirebaseClient client, string token)
+        public static Task<Login> GetLoginAsync(this FirebaseClient client, string token)
         {
-            return client.LoginQuery(token).OnceSingleAsync<string>();
+            return client.LoginQuery(token).OnceSingleAsync<Login>();
         }
 
-        public static async Task<string> LoginAsync(this FirebaseClient client, string username)
+        public static async Task<string> LoginAsync(this FirebaseClient client, Login login)
         {
-            FirebaseObject<string> login = await client.LoginsQuery().PostAsync<string>(username);
-            return login.Key;
+            FirebaseObject<Login> obj = await client.LoginsQuery().PostAsync(login);
+            return obj.Key;
         }
 
         public static Task LogoutAsync(this FirebaseClient client, string token)

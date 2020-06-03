@@ -1,12 +1,10 @@
 ﻿import React from 'react';
-import {Redirect} from "react-router-dom";
 import "./Home.css"
 import GifsList from "../components/GifsList";
 import ChildrenList from "../components/ChildrenList";
 import DataCacheBase from "./DataCacheBase";
 import getPathFromCache from "../helper/getPathFromCache";
 import {app} from "../App";
-import {swal} from "../components/Swal";
 import addCategory from "../helper/addCategory";
 import {getLoggedInNav} from "../helper/defaultNav";
 
@@ -16,11 +14,6 @@ export default class Home extends DataCacheBase {
     }
 
     render() {
-        if (this.state.logout) {
-            console.log('home logout');
-            return <Redirect to="/logout"/>
-        }
-
         const categoryId = this.getCurrentCategoryId();
         const category = app.cache.categoryData[categoryId];
         const isEmpty = category && category.children.length === 0 && category.gifs.length === 0;

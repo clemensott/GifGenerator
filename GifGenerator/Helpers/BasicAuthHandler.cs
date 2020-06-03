@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using System;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using GifGenerator.Models.Users;
 
 namespace GifGenerator.Helpers
 {
@@ -21,13 +23,14 @@ namespace GifGenerator.Helpers
                 return AuthenticateResult.NoResult();
             }
 
-            string username = string.IsNullOrWhiteSpace(token)
+            Login login = string.IsNullOrWhiteSpace(token)
                 ? null
-                : await FbDbHelper.Client.GetLoginUsernameAsync(token);
+                : await FbDbHelper.Client.GetLoginAsync(token);
 
-            if (username == null) return AuthenticateResult.Fail("Invalid auth token");
+            if (login == null) return AuthenticateResult.Fail("Invalid auth token");
+            if (login.Expires < DateTimeOffset.Now) return AuthenticateResult.Fail("Token expired");
 
-            Claim[] claims = new[] {new Claim(ClaimTypes.NameIdentifier, username)};
+            Claim[] claims = new[] {new Claim(ClaimTypes.NameIdentifier, login.Username)};
             ClaimsIdentity identity = new ClaimsIdentity(claims, Scheme.Name);
             ClaimsPrincipal principal = new ClaimsPrincipal(identity);
             AuthenticationTicket ticket = new AuthenticationTicket(principal, Scheme.Name);

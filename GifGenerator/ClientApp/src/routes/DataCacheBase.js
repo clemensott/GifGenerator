@@ -15,7 +15,6 @@ export default class DataCacheBase extends RouteBase {
             lastFetchPathId: null,
             lastFetchCategoryId: null,
             lastFetchGifId: null,
-            logout: false,
         }
     }
 
@@ -59,7 +58,7 @@ export default class DataCacheBase extends RouteBase {
                     lastFetchPathId: categoryId
                 });
             } else if (response.status === 401) {
-                this.setState({logout: true});
+                this.props.history.push('/logout');
             } else if (this.props.history.location.pathname !== '/') {
                 this.props.history.push('/');
             }
@@ -105,7 +104,7 @@ export default class DataCacheBase extends RouteBase {
                     });
                 }
             } else if (response.status === 401) {
-                this.setState({logout: true});
+                this.props.history.push('/logout');
             } else if (this.props.history.location.pathname !== '/') {
                 this.props.history.push('/');
             }
@@ -131,7 +130,7 @@ export default class DataCacheBase extends RouteBase {
                     lastFetchGifId: gifId,
                 });
             } else if (response.status === 401) {
-                this.setState({logout: true});
+                this.props.history.push('/logout');
             } else if (this.props.history.location.pathname !== '/') {
                 this.props.history.push('/');
             }

@@ -2,6 +2,7 @@
 import {app} from "../App";
 import {getLoggedOutNav} from "../helper/defaultNav";
 import RouteBase from "./RouteBase";
+import {getCookieValue, setCookie} from "../helper/cookies";
 
 export default class Login extends RouteBase {
     constructor(props) {
@@ -36,8 +37,9 @@ export default class Login extends RouteBase {
             const body = {
                 username,
                 password,
+                keepLoggedIn,
             };
-            let loginResponse = await fetch('/api/auth/login', {
+            const loginResponse = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8'
@@ -46,21 +48,23 @@ export default class Login extends RouteBase {
             });
 
             if (loginResponse.ok) {
-                const token = await loginResponse.text();
-                document.cookie = `auth=${token}`;
+                const login = await loginResponse.json();
+                if (!getCookieValue('auth')) {
+                    // Cookie should be already set by API but you never know 
+                    setCookie({name: 'auth', value: login.token, expires: new Date(login.expires)});
+                }
 
                 const userResponse = await fetch('/api/user');
                 if (userResponse.ok) {
                     app.data.user = await userResponse.json();
-                    app.data.authToken = token;
                     this.props.history.push('/');
                 } else {
-                    this.setError('A error occured');
+                    this.setError(`User error: ${userResponse.statusText}`);
                 }
             } else if (loginResponse.status === 400) {
                 this.setError('Please enter a correct Username and password');
             } else {
-                this.setError('A error occured');
+                this.setError(`Login error: ${loginResponse.statusText}`);
             }
         } catch (e) {
             this.setError(e.message);
