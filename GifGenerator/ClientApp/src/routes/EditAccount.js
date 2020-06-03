@@ -49,7 +49,7 @@ export default class EditAccount extends DataCacheBase {
                 body: JSON.stringify(body),
             });
 
-            if (response.status === 200) {
+            if (response.ok) {
                 this.setState({
                     passwordDiffer: false,
                     isChangingPassword: false,
@@ -91,50 +91,53 @@ export default class EditAccount extends DataCacheBase {
 
         const path = this.getPath();
         return (
-            <div>
+            <div className="flex-container">
                 <Navbar path={path}/>
 
-                <div className={`container pt-4 ${this.state.isChangingPassword ? 'd-none' : ''}`}>
-                    <div className="form-group">
-                        <label>New password:</label>
-                        <input ref={this.newPasswordRef} type="password"
-                               className="form-control" placeholder="Enter new password"/>
-                    </div>
-                    <div className="form-group">
-                        <label>Repeat new password:</label>
-                        <input ref={this.repeatPasswordRef} type="password" placeholder="Enter new password again"
-                               className="form-control"/>
+                <div className="container content-container pt-4">
+                    <div className={this.state.isChangingPassword ? 'd-none' : ''}>
+                        <div className="form-group">
+                            <label>New password:</label>
+                            <input ref={this.newPasswordRef} type="password"
+                                   className="form-control" placeholder="Enter new password"/>
+                        </div>
+                        <div className="form-group">
+                            <label>Repeat new password:</label>
+                            <input ref={this.repeatPasswordRef} type="password" placeholder="Enter new password again"
+                                   className="form-control"/>
+                        </div>
+
+                        <div className={`form-group form-check  ${this.state.passwordDiffer ? '' : 'd-none'}`}>
+                            <label className="form-check-label">
+                                <input className="is-invalid d-none"/>
+                                <div className="invalid-feedback">New passwords do not match.</div>
+                            </label>
+                        </div>
+
+                        <div className={`form-group form-check  ${this.state.error ? '' : 'd-none'}`}>
+                            <label className="form-check-label">
+                                <input className="is-invalid d-none"/>
+                                <div className="invalid-feedback">{this.state.error}</div>
+                            </label>
+                        </div>
+
+                        <div
+                            className={`form-group form-check  ${this.state.changePasswordSuccessfully ? '' : 'd-none'}`}>
+                            <label className="form-check-label">
+                                <input className="is-valid d-none"/>
+                                <div className="valid-feedback">Password changed successfully.</div>
+                            </label>
+                        </div>
+
+                        <button className="btn bg-primary text-light"
+                                onClick={async () => await this.changePassword()}>
+                            Change Password
+                        </button>
                     </div>
 
-                    <div className={`form-group form-check  ${this.state.passwordDiffer ? '' : 'd-none'}`}>
-                        <label className="form-check-label">
-                            <input className="is-invalid d-none"/>
-                            <div className="invalid-feedback">New passwords do not match.</div>
-                        </label>
+                    <div className={`center ${this.state.isChangingPassword ? '' : 'd-none'}`}>
+                        <div className="spinner-border text-primary"/>
                     </div>
-
-                    <div className={`form-group form-check  ${this.state.error ? '' : 'd-none'}`}>
-                        <label className="form-check-label">
-                            <input className="is-invalid d-none"/>
-                            <div className="invalid-feedback">{this.state.error}</div>
-                        </label>
-                    </div>
-
-                    <div className={`form-group form-check  ${this.state.changePasswordSuccessfully ? '' : 'd-none'}`}>
-                        <label className="form-check-label">
-                            <input className="is-valid d-none"/>
-                            <div className="valid-feedback">Password changed successfully.</div>
-                        </label>
-                    </div>
-
-                    <button className="btn bg-primary text-light"
-                            onClick={async () => await this.changePassword()}>
-                        Change Password
-                    </button>
-                </div>
-
-                <div className={`center ${this.state.isChangingPassword ? '' : 'd-none'}`}>
-                    <div className="spinner-border text-primary"/>
                 </div>
             </div>
         );

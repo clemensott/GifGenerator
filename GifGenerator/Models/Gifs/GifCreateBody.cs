@@ -12,6 +12,7 @@ namespace GifGenerator.Models.Gifs
         /// <summary>
         /// Get or sets the size the created GIF will be resized to. This can change the aspect ratio.
         /// </summary>
+        [Required]
         public Size Size { get; set; }
 
         /// <summary>

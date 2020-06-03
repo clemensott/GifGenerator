@@ -43,12 +43,12 @@ export default class Login extends Component {
                 body: JSON.stringify(body),
             });
 
-            if (loginResponse.status === 200) {
+            if (loginresponse.ok) {
                 const token = await loginResponse.text();
                 document.cookie = `auth=${token}`;
 
                 const userResponse = await fetch('/api/user');
-                if (userResponse.status === 200) {
+                if (userresponse.ok) {
                     this.props.data.user = await userResponse.json();
                     this.props.data.authToken = token;
                     this.props.history.push('/');

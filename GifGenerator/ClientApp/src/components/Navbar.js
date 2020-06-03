@@ -8,14 +8,14 @@ function renderCustomIcon(custom) {
         return (
             <div key={custom.title} className="nav-icon" title={custom.title}>
                 <Link to={custom.href}>
-                    <i className={`fa ${custom.icon} fa-2x pr-3`}/>
+                    <i className={`fas ${custom.icon} fa-2x pr-3`}/>
                 </Link>
             </div>
         )
     }
     return (
         <div key={custom.title} className="nav-click" title={custom.title}>
-            <i className={`fa ${custom.icon} fa-2x pr-3`} onClick={custom.onClick}/>
+            <i className={`fas ${custom.icon} fa-2x pr-3`} onClick={custom.onClick}/>
         </div>
     )
 }
@@ -32,12 +32,12 @@ export default function (props) {
                     {customIcons}
                     <div className="nav-icon" title="Edit account">
                         <Link to="/account/edit">
-                            <i className="fa fa-user fa-2x pr-3"/>
+                            <i className="fas fa-user-cog fa-2x pr-3"/>
                         </Link>
                     </div>
                     <div className="nav-icon" title="Logout">
                         <Link to="/logout">
-                            <i className="fa fa-sign-in fa-2x"/>
+                            <i className="fas fa-sign-in-alt fa-2x"/>
                         </Link>
                     </div>
                 </div>

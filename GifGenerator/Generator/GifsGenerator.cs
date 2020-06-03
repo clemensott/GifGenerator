@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using GifGenerator.Models;
 
 namespace GifGenerator.Generator
 {
@@ -25,7 +26,8 @@ namespace GifGenerator.Generator
                 IEnumerable<Image> images;
                 using (Stream stream = await GetStream(src, ref client))
                 {
-                    images = BaseFramesProvider.GetFramesProvider(src.Type).GetFrames(stream, src.Begin, src.Count, src.Step);
+                    images = BaseFramesProvider.GetFramesProvider(src.Type)
+                        .GetFrames(stream, src.Begin, src.Count, src.Step);
                 }
 
                 foreach (Image img in images)
@@ -45,7 +47,7 @@ namespace GifGenerator.Generator
                     img.Mutate(i => i.Resize(args.Size));
 
                     GifFrameMetadata frameMeta = img.Frames.RootFrame.Metadata.GetGifMetadata();
-                    frameMeta.FrameDelay = (int)src.FrameDelay;
+                    frameMeta.FrameDelay = src.FrameDelay ?? 0;
 
                     gif.Frames.InsertFrame(gif.Frames.Count - 1, img.Frames.RootFrame);
 
@@ -72,19 +74,22 @@ namespace GifGenerator.Generator
             return RunRequest(client, src);
         }
 
-        public static async Task<Stream> RunRequest(HttpClient client, GifCreateSource src)
+        private static async Task<Stream> RunRequest(HttpClient client, GifCreateSource src)
         {
             if (!string.IsNullOrWhiteSpace(src.Url)) return await client.GetStreamAsync(src.Url);
+            if (src.CustomRequest == null) throw new BadRequestException("No data source");
 
-            var response = await client.SendAsync(GetHttpRequest(src.CustomRequest));
-            if (!response.IsSuccessStatusCode) throw new Exception("Requesting data was not successful");
+            HttpResponseMessage response = await client.SendAsync(GetHttpRequest(src.CustomRequest));
+            if (!response.IsSuccessStatusCode) throw new BadRequestException("Requesting data was not successful");
 
             return await response.Content.ReadAsStreamAsync();
         }
 
         private static HttpRequestMessage GetHttpRequest(CustomSourceRequest request)
         {
-            byte[] content = !string.IsNullOrWhiteSpace(request.Content) ? Convert.FromBase64String(request.Content) : null;
+            byte[] content = !string.IsNullOrWhiteSpace(request.Content)
+                ? Convert.FromBase64String(request.Content)
+                : null;
             HttpRequestMessage http = new HttpRequestMessage()
             {
                 RequestUri = new Uri(request.Url),

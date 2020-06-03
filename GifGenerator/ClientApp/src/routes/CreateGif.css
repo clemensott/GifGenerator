@@ -1,0 +1,19 @@
+﻿.add-gif-source-item {
+    position: relative;
+    width: 100%;
+    background: #f1f1f1;;
+}
+
+.add-gif-source-item-controls {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.add-gif-source-item-icon:hover {
+    cursor: pointer;
+}
+
+.add-gif-source-preview-img {
+    max-width: 100%;
+}

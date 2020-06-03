@@ -49,8 +49,9 @@ namespace GifGenerator.Models.Gifs
         public Rectangle? CropRect { get; set; }
 
         /// <summary>
-        /// Gets or sets the frame delay in number of hundredths (1/100) of a second. Defaults to 0.
+        /// Gets or sets the frame delay in number of hundredths (1/100) of a second. Defaults to frame delay of src or 0.
         /// </summary>
-        public uint FrameDelay { get; set; }
+        [Range(0, int.MaxValue)]
+        public int? FrameDelay { get; set; }
     }
 }

@@ -40,8 +40,8 @@ export default function (props) {
                 <div className="modal-dialog">
                     <div className="modal-content">
                         <div className="modal-header">
-                            <span style={{color: props.color}}>
-                                <i className={`fa ${props.icon ? props.icon : 'd-none'} fa-2x pr-3`}/>
+                            <span className={`text-${props.color}`}>
+                                <i className={`fas ${props.icon ? props.icon : 'd-none'} fa-2x pr-3`}/>
                             </span>
                             <h5 className="modal-title">{props.title}</h5>
                             <button type="button" className="close"

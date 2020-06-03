@@ -43,7 +43,7 @@ export default class Home extends DataCacheBase {
                 body: JSON.stringify(name),
             });
 
-            if (response.status === 200) {
+            if (response.ok) {
                 const newCategoryId = await response.text();
 
                 this.props.cache.categories[newCategoryId] = {
@@ -67,7 +67,7 @@ export default class Home extends DataCacheBase {
                 await new new Swal({
                     title: 'Category added',
                     icon: 'fa-check-circle',
-                    color: 'green',
+                    color: 'success',
                     buttons: 'Ok',
                 }).show();
             } else {
@@ -75,7 +75,7 @@ export default class Home extends DataCacheBase {
                 await new new Swal({
                     title: 'Error',
                     icon: 'fa-times',
-                    color: 'red',
+                    color: 'danger',
                     text: `Status code: ${response.status}`,
                     buttons: 'Ok',
                 }).show();
@@ -85,7 +85,7 @@ export default class Home extends DataCacheBase {
             await new new Swal({
                 title: 'Exception',
                 icon: 'fa-times',
-                color: 'red',
+                color: 'danger',
                 text: `Status code: ${e.message}`,
                 buttons: 'Ok',
             }).show();
@@ -104,17 +104,18 @@ export default class Home extends DataCacheBase {
 
         const categoryId = this.getCurrentCategoryId();
         const customIcons = [{
+            title: 'Add GIF',
+            href: `/gif/create/${categoryId}`,
+            icon: 'fa-plus',
+        }, {
             title: 'Add category',
             onClick: this.addCategory,
-            icon: 'fa-plus',
+            icon: 'fa-folder-plus',
+        }, {
+            title: 'Edit category',
+            href: `/edit/${categoryId}`,
+            icon: 'fa-edit',
         }];
-        if (categoryId) {
-            customIcons.push({
-                title: 'Edit category',
-                href: `/edit/${categoryId}`,
-                icon: 'fa-edit',
-            });
-        }
         const category = this.props.cache.categoryData[categoryId];
         const path = getPathFromCache(this.props.cache.categories, categoryId, false);
         const isEmpty = category && category.children.length === 0 && category.gifs.length === 0;
@@ -123,19 +124,21 @@ export default class Home extends DataCacheBase {
         if (currentCategoryName) document.title = `GIFs - ${currentCategoryName}`;
 
         return (
-            <div>
+            <div className="flex-container">
                 <Navbar path={path} customIcons={customIcons}/>
 
-                <div className={`container ${category ? '' : 'd-none'}`}>
-                    <ChildrenList children={category ? category.children : []}/>
-                    <GifsList gifs={category ? category.gifs : []}/>
-                    <h3 className={`p-2 ${isEmpty ? '' : 'd-none'}`}>
-                        This category is empty.
-                    </h3>
-                </div>
+                <div className="container content-container">
+                    <div className={category ? '' : 'd-none'}>
+                        <ChildrenList children={category ? category.children : []}/>
+                        <GifsList gifs={category ? category.gifs : []}/>
+                        <h3 className={`p-2 ${isEmpty ? '' : 'd-none'}`}>
+                            This category is empty.
+                        </h3>
+                    </div>
 
-                <div className={`center ${category ? 'd-none' : ''}`}>
-                    <div className="spinner-border text-primary"/>
+                    <div className={`center ${category ? 'd-none' : ''}`}>
+                        <div className="spinner-border text-primary"/>
+                    </div>
                 </div>
             </div>
         );

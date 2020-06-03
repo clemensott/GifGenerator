@@ -16,18 +16,29 @@ export default class Gif extends DataCacheBase {
         const {gifId, categoryId} = this.getCurrentData();
         let path = null;
         let siblings = null;
+        let customIcons = [];
         if (categoryId) {
             path = getPathFromCache(this.props.cache.categories, categoryId, true);
             siblings = this.props.cache.categoryData[categoryId] &&
                 this.props.cache.categoryData[categoryId].gifs.filter(gif => gif.id !== gifId);
+
+            customIcons = [{
+                title: 'Add GIF',
+                href: `/gif/create/${categoryId}`,
+                icon: 'fa-plus',
+            }, {
+                title: 'Edit category',
+                href: `/edit/${categoryId}`,
+                icon: 'fa-edit',
+            }];
         }
 
         const currentCategoryName = this.props.cache.categories[categoryId] && this.props.cache.categories[categoryId].name;
-        if (currentCategoryName) document.title = `GIF - ${currentCategoryName}`; 
+        if (currentCategoryName) document.title = `GIF - ${currentCategoryName}`;
 
         return (
             <div>
-                <Navbar path={path}/>
+                <Navbar path={path} customIcons={customIcons}/>
 
                 <div className="container">
                     <div className="gif-item-container">
@@ -35,7 +46,7 @@ export default class Gif extends DataCacheBase {
                             <img src={`/api/gif/${gifId}`} alt={gifId} className="gif-item"/>
                         </a>
                     </div>
-                    
+
                     <GifsList gifs={siblings || []}/>
                 </div>
             </div>

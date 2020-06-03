@@ -1,0 +1,14 @@
+﻿.gif-create-source-preview-container {
+    text-align: center;
+    position: relative;
+}
+
+.gif-source-preview-video {
+    max-width: 100%;
+    max-height: 400pt;
+}
+
+.gif-source-preview-image {
+    max-width: 100%;
+    max-height: 400pt;
+}

@@ -1,8 +1,10 @@
 ﻿using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Firebase.Database.Query;
 using GifGenerator.Generator;
 using GifGenerator.Helpers;
+using GifGenerator.Models;
 using GifGenerator.Models.Gifs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -68,16 +70,29 @@ namespace GifGenerator.Controllers
 
         [HttpPost("create")]
         [AllowAnonymous]
+        [DisableRequestSizeLimit]
         public async Task CreateGif([FromBody] GifCreateBody body)
         {
-            using (Image gif = await GifsGenerator.Create(body))
+            try
             {
-                Response.ContentType = "image/gif";
-                gif.SaveAsGif(Response.Body);
+                using (Image gif = await GifsGenerator.Create(body))
+                {
+                    Response.ContentType = "image/gif";
+                    gif.SaveAsGif(Response.Body);
+                }
+            }
+            catch (BadRequestException e)
+            {
+                Response.StatusCode = 400;
+                Response.ContentType = "text/plain";
+
+                byte[] bytes = Encoding.UTF8.GetBytes(e.Message);
+                await Response.Body.WriteAsync(bytes, 0, bytes.Length);
             }
         }
 
         [HttpPost("create/add/{categoryId}")]
+        [DisableRequestSizeLimit]
         public async Task<ActionResult<string>> CreateAdd(string categoryId, [FromBody] GifCreateBody body)
         {
             if (!FbDbHelper.IsValidKey(categoryId)) return BadRequest();
@@ -88,19 +103,26 @@ namespace GifGenerator.Controllers
             bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, categoryId);
             if (!hasCategory) return NotFound();
 
-            using (Image gif = await GifsGenerator.Create(body))
+            try
             {
-                using (Stream stream = gif.SaveInMemoryStreamAsGif())
+                using (Image gif = await GifsGenerator.Create(body))
                 {
-                    Gif meta = new Gif()
+                    using (Stream stream = gif.SaveInMemoryStreamAsGif())
                     {
-                        CategoryId = categoryId,
-                        PixelSize = gif.Size(),
-                        FileSize = stream.Length
-                    };
-                    gifId = await FbDbHelper.Client.AddGifAsync(meta);
-                    await FbSgHelper.Client.PutGifAsync(gifId, stream);
+                        Gif meta = new Gif()
+                        {
+                            CategoryId = categoryId,
+                            PixelSize = gif.Size(),
+                            FileSize = stream.Length
+                        };
+                        gifId = await FbDbHelper.Client.AddGifAsync(meta);
+                        await FbSgHelper.Client.PutGifAsync(gifId, stream);
+                    }
                 }
+            }
+            catch (BadRequestException e)
+            {
+                return BadRequest(e.Message);
             }
 
             await FbDbHelper.Client.CategoryGifQuery(categoryId, gifId).PutAsync();

@@ -50,7 +50,7 @@ export default class SignUp extends Component {
                 body: JSON.stringify(body),
             });
 
-            if (response.status === 200) {
+            if (response.ok) {
                 this.props.data.user.username = username;
 
                 this.props.history.push('/login');

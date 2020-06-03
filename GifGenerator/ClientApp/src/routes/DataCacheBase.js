@@ -42,7 +42,7 @@ export default class DataCacheBase extends Component {
             this.fetchPathId = categoryId;
             const response = await fetch(`/api/category/${categoryId}/path`);
 
-            if (response.status === 200) {
+            if (response.ok) {
                 const path = await response.json();
                 path.reduce((last, current) => {
                     this.props.cache.categories[current.id] = {
@@ -77,7 +77,7 @@ export default class DataCacheBase extends Component {
             this.fetchCategoryId = categoryId;
             const response = await fetch(`/api/category/${categoryId}`);
 
-            if (response.status === 200) {
+            if (response.ok) {
                 const category = await response.json();
 
                 this.props.cache.categoryData[categoryId] = category;
@@ -123,7 +123,7 @@ export default class DataCacheBase extends Component {
             this.fetchGifId = gifId;
             const response = await fetch(`/api/gif/${gifId}/meta`);
 
-            if (response.status === 200) {
+            if (response.ok) {
                 this.props.cache.gifs[gifId] = await response.json();
                 this.setState({
                     lastFetchGifId: gifId,

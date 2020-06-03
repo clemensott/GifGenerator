@@ -1,0 +1,9 @@
+﻿.gif-create-source-auto-crop-container{
+    position: relative;
+}
+
+.gif-create-source-auto-crop-item{
+    position: absolute;
+    right: 0;
+    bottom: 0;
+}

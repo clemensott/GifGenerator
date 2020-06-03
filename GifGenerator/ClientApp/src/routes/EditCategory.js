@@ -40,7 +40,7 @@ export default class EditCategory extends DataCacheBase {
                 body: JSON.stringify(newName),
             });
 
-            if (response.status === 200) {
+            if (response.ok) {
                 const category = await response.json();
                 this.props.cache.categoryData[categoryId] = category;
                 this.props.cache.categories[category.id].name = newName;
@@ -97,7 +97,7 @@ export default class EditCategory extends DataCacheBase {
             title: 'Are you sure you?',
             text: 'You are deleting all gifs and sub categories. Once deleted, you will not be able to recover all of this!',
             icon: 'fa-exclamation-triangle',
-            color: 'red',
+            color: 'danger',
             buttons: [{
                 type: 'danger',
                 text: 'Delete',
@@ -140,41 +140,44 @@ export default class EditCategory extends DataCacheBase {
         const currentCategoryName = this.props.cache.categories[categoryId] && this.props.cache.categories[categoryId].name;
         if (currentCategoryName) document.title = `GIFs - Edit - ${currentCategoryName}`;
 
-        const isRootCategory = categoryId === (this.props.data.user && this.props.data.user.rootCategoryId);
+        const isRootCategory = this.props.data.user && categoryId === this.props.data.user.rootCategoryId;
 
         return (
-            <div>
+            <div className="flex-container">
                 <Navbar path={path} customIcons={customIcons}/>
 
-                <div className={`container pt-4 ${this.state.isLoading ? 'd-none' : ''}`}>
-                    <div className="form-group">
-                        <label>New name:</label>
-                        <input ref={this.newNameRef} type="text"
-                               className="form-control" placeholder="Enter new name"/>
+                <div className="container content-container pt-4">
+                    <div className={this.state.isLoading ? 'd-none' : ''}>
+                        <div className="form-group">
+                            <label>New name:</label>
+                            <input ref={this.newNameRef} type="text"
+                                   className="form-control" placeholder="Enter new name"/>
+                        </div>
+
+                        <div className={`alert alert-danger  ${this.state.changeNameError ? '' : 'd-none'}`}
+                             role="alert">
+                            {this.state.changeNameError}
+                        </div>
+
+                        <div className={`alert alert-success  ${this.state.changeNameSuccessfully ? '' : 'd-none'}`}
+                             role="alert">
+                            Name changed successfully.
+                        </div>
+
+                        <button className="btn bg-primary text-light float-left"
+                                onClick={async () => await this.changeName()}>
+                            Change name
+                        </button>
+
+                        <button className={`btn bg-danger text-light float-right ${isRootCategory ? 'd-none' : ''}`}
+                                onClick={async () => await this.deleteCategory()}>
+                            Delete Category
+                        </button>
+
                     </div>
-
-                    <div className={`alert alert-danger  ${this.state.changeNameError ? '' : 'd-none'}`} role="alert">
-                        {this.state.changeNameError}
+                    <div className={`center ${this.state.isLoading ? '' : 'd-none'}`}>
+                        <div className="spinner-border text-primary"/>
                     </div>
-
-                    <div className={`alert alert-success  ${this.state.changeNameSuccessfully ? '' : 'd-none'}`}
-                         role="alert">
-                        Name changed successfully.
-                    </div>
-
-                    <button className="btn bg-primary text-light float-left"
-                            onClick={async () => await this.changeName()}>
-                        Change name
-                    </button>
-
-                    <button className={`btn bg-danger text-light float-right ${isRootCategory ? 'd-none' : ''}`}
-                            onClick={async () => await this.deleteCategory()}>
-                        Delete Category
-                    </button>
-                </div>
-
-                <div className={`center ${this.state.isLoading ? '' : 'd-none'}`}>
-                    <div className="spinner-border text-primary"/>
                 </div>
             </div>
         );

@@ -10,6 +10,7 @@ import EditCategory from "./routes/EditCategory";
 import {getCookieValue} from "./helper/cookies";
 import Swal from "./components/Swal";
 import {addOnShowSwalListener, removeOnShowSwalListener} from "./helper/swal";
+import CreateGif from "./routes/CreateGif";
 
 export default class App extends Component {
     displayName = App.name
@@ -47,6 +48,8 @@ export default class App extends Component {
                            render={(props) => <EditAccount {...props} data={this.state} cache={this.cache}/>}/>
                     <Route path='/edit/:categoryId'
                            render={(props) => <EditCategory {...props} data={this.state} cache={this.cache}/>}/>
+                    <Route path='/gif/create/:categoryId'
+                           render={(props) => <CreateGif {...props} data={this.state} cache={this.cache}/>}/>
                     <Route path='/gif/:gifId'
                            render={(props) => <Gif {...props} data={this.state} cache={this.cache}/>}/>
                     <Route path='/:categoryId'
@@ -67,7 +70,7 @@ export default class App extends Component {
         if (!this.state.user && this.state.authToken) {
             try {
                 const response = await fetch('/api/user');
-                if (response.status === 200) {
+                if (response.ok) {
                     const user = await response.json();
                     this.setState({user,});
                 }
