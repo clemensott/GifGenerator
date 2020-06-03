@@ -70,6 +70,8 @@ export default class SignUp extends Component {
     }
 
     render() {
+        document.title = 'GIFs - Sign up';
+
         if (this.state.isLoggingIn) {
             return (
                 <div className="center">
@@ -79,8 +81,9 @@ export default class SignUp extends Component {
         }
 
         return (
-            <div className="container">
-                <div className="center w-50">
+            <div className="flex-container">
+                <div className="form-border"/>
+                <div className="container form-content p-3 rounded">
                     <div className="form-group">
                         <label>Username:</label>
                         <input ref={this.usernameRef} type="text" defaultValue={this.state.username}
@@ -119,6 +122,7 @@ export default class SignUp extends Component {
                         </button>
                     </Link>
                 </div>
+                <div className="form-border"/>
             </div>
         );
     }

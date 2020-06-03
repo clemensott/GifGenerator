@@ -1,5 +1,6 @@
 ﻿import React, {Component} from 'react';
 import {Link, withRouter} from "react-router-dom";
+import './SignInUp.css'
 
 export default class Login extends Component {
     constructor(props) {
@@ -43,12 +44,12 @@ export default class Login extends Component {
                 body: JSON.stringify(body),
             });
 
-            if (loginresponse.ok) {
+            if (loginResponse.ok) {
                 const token = await loginResponse.text();
                 document.cookie = `auth=${token}`;
 
                 const userResponse = await fetch('/api/user');
-                if (userresponse.ok) {
+                if (userResponse.ok) {
                     this.props.data.user = await userResponse.json();
                     this.props.data.authToken = token;
                     this.props.history.push('/');
@@ -73,6 +74,8 @@ export default class Login extends Component {
     }
 
     render() {
+        document.title = 'GIFs - Login';
+
         if (this.state.isLoggingIn) {
             return (
                 <div className="center">
@@ -82,44 +85,49 @@ export default class Login extends Component {
         }
 
         return (
-            <div className="container">
-                <div className="center w-50">
-                    <div className="form-group">
-                        <label>Username:</label>
-                        <input ref={this.usernameRef} type="text" defaultValue={this.state.username}
-                               className="form-control" placeholder="Enter username"/>
-                    </div>
-                    <div className="form-group">
-                        <label>Password:</label>
-                        <input ref={this.passwordRef} type="password" defaultValue={this.state.password}
-                               className="form-control" placeholder="Enter password"/>
-                    </div>
-                    <div className="form-group form-check">
-                        <label className="form-check-label">
-                            <input ref={this.keepLoggedInRef} type="checkbox" defaultChecked={this.state.keepLoggedIn}
-                                   className="form-check-input"/>
-                            Remember me
-                        </label>
-                    </div>
+            <div className="flex-container">
+                <div className="form-border"/>
+                <div className="container form-content p-3 rounded">
+                    <div className="">
+                        <div className="form-group">
+                            <label>Username:</label>
+                            <input ref={this.usernameRef} type="text" defaultValue={this.state.username}
+                                   className="form-control" placeholder="Enter username"/>
+                        </div>
+                        <div className="form-group">
+                            <label>Password:</label>
+                            <input ref={this.passwordRef} type="password" defaultValue={this.state.password}
+                                   className="form-control" placeholder="Enter password"/>
+                        </div>
+                        <div className="form-group form-check">
+                            <label className="form-check-label">
+                                <input ref={this.keepLoggedInRef} type="checkbox"
+                                       defaultChecked={this.state.keepLoggedIn}
+                                       className="form-check-input"/>
+                                Remember me
+                            </label>
+                        </div>
 
-                    <div className={`form-group form-check  ${this.state.error ? '' : 'd-none'}`}>
-                        <label className="form-check-label">
-                            <input className="is-invalid d-none"/>
-                            <div className="invalid-feedback">{this.state.error}</div>
-                        </label>
-                    </div>
+                        <div className={`form-group form-check  ${this.state.error ? '' : 'd-none'}`}>
+                            <label className="form-check-label">
+                                <input className="is-invalid d-none"/>
+                                <div className="invalid-feedback">{this.state.error}</div>
+                            </label>
+                        </div>
 
-                    <button className="btn bg-primary text-light float-left"
-                            onClick={async () => await this.login()}>
-                        Login
-                    </button>
-
-                    <Link to="/signup">
-                        <button className="btn bg-secondary text-light float-right">
-                            Sign up
+                        <button className="btn bg-primary text-light float-left"
+                                onClick={async () => await this.login()}>
+                            Login
                         </button>
-                    </Link>
+
+                        <Link to="/signup">
+                            <button className="btn bg-secondary text-light float-right">
+                                Sign up
+                            </button>
+                        </Link>
+                    </div>
                 </div>
+                <div className="form-border"/>
             </div>
         );
     }
