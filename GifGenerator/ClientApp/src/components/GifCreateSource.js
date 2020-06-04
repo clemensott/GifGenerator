@@ -187,6 +187,7 @@ export default class GifCreateSource extends Component {
 
                 if (result.type === 'primary') {
                     this.props.source.type = this.typeRef.current.value = fileSourceType.value;
+                    this.setState({lastValidated: 'type'});
                 }
             }
         }

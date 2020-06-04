@@ -73,7 +73,7 @@ export default class App extends Component {
         }
 
         const authToken = getCookieValue('auth');
-        if (this.state.user && authToken) {
+        if (!this.state.user && authToken) {
             return (
                 <div className="center">
                     <div className="spinner-border text-primary"/>
