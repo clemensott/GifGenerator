@@ -3,23 +3,20 @@ import {Redirect} from "react-router-dom";
 import {app} from "../App";
 import RouteBase from "./RouteBase";
 import {getLoggedOutNav} from "../helper/defaultNav";
-import {deleteCookie} from "../helper/cookies";
+import {deleteCookie, getCookieValue} from "../helper/cookies";
 
 export default class Logout extends RouteBase {
     constructor(props) {
         super(props);
-
-        this.state = {
-            redirect: false,
-        }
     }
 
     render() {
-        if (this.state.redirect) return <Redirect to="/login"/>
-
         return (
             <div className="center">
-                <div className="spinner-border text-primary"/>
+                <div>
+                    <div className="spinner-border text-primary"/>
+                </div>
+                <label>Loging out</label>
             </div>
         );
     }
@@ -27,24 +24,27 @@ export default class Logout extends RouteBase {
     async componentDidMount() {
         super.componentDidMount();
 
+        app.data.user = null;
+        app.cache.categories = {};
+        app.cache.categoryData = {};
+        app.cache.gifs = {};
+
         try {
-            await fetch('/api/auth/logout', {
-                method: 'POST',
-            });
+            const authToken = getCookieValue('auth');
+            if (authToken) {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                });
+            }
         } catch (e) {
             console.log(e);
         }
 
-        this.deleteAllCachedData();
-
-        this.setState({
-            redirect: true,
-        });
-    }
-
-    deleteAllCachedData() {
-        app.data.user = null;
         deleteCookie('auth');
+
+        if (this.isComponentMounted) {
+            this.props.history.push('/login');
+        }
     }
 
     getNavProps() {

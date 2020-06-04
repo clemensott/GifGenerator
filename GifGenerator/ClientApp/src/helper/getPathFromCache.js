@@ -5,7 +5,7 @@
 
     const path = withLinkToCurrent ? {
         links: [{
-            href: `/${category.id}`,
+            href: `/category/${category.id}`,
             text: category.name,
         }],
         current: null,
@@ -21,7 +21,7 @@
         if (!category) return null;
 
         path.links.unshift({
-            href: `/${category.id}`,
+            href: `/category/${category.id}`,
             text: category.name,
         });
     }

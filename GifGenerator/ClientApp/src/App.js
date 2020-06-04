@@ -11,6 +11,8 @@ import {getCookieValue} from "./helper/cookies";
 import {Swal} from "./components/Swal";
 import CreateGif from "./routes/CreateGif";
 import {Navbar} from "./components/Navbar";
+import LoggedOutRoute from "./Routing/LoggedOutRoute";
+import LoggedInRoute from "./Routing/LoggedInRoute";
 
 export const app = {
     data: null,
@@ -37,33 +39,8 @@ export default class App extends Component {
     }
 
     setState(state, callback) {
-        app.data = state;
+        app.data = {...app.data, ...state};
         super.setState(state, callback);
-    }
-
-    renderLoggedOutRouting() {
-        return (
-            <Switch>
-                <Route path='/login' component={Login}/>
-                <Route path='/signup' component={SignUp}/>
-                <Route path='/' render={() => <Redirect to="/login"/>}/>
-            </Switch>
-        )
-    }
-
-    renderLoggedInRouting() {
-        return (
-            <Switch>
-                <Route path='/logout' component={Logout}/>
-                <Route path='/account/edit' component={EditAccount}/>
-                <Route path='/edit/:categoryId' component={EditCategory}/>
-                <Route path='/gif/create/:categoryId' component={CreateGif}/>
-                <Route path='/gif/:gifId' component={Gif}/>
-                <Route path='/:categoryId' component={Home}/>
-                <Route exact path='/' component={Home}/>
-                <Route path='/' render={() => <Redirect to="/"/>}/>
-            </Switch>
-        )
     }
 
     render() {
@@ -76,7 +53,10 @@ export default class App extends Component {
         if (!this.state.user && authToken) {
             return (
                 <div className="center">
-                    <div className="spinner-border text-primary"/>
+                    <div>
+                        <div className="spinner-border text-primary"/>
+                    </div>
+                    <label>Loading</label>
                 </div>
             );
         }
@@ -86,9 +66,18 @@ export default class App extends Component {
                 <Navbar/>
 
                 <div className="container content-container">
-                    {authToken ?
-                        this.renderLoggedInRouting() :
-                        this.renderLoggedOutRouting()}
+                    <Switch>
+                        <LoggedOutRoute path='/login' component={Login}/>
+                        <LoggedOutRoute path='/signup' component={SignUp}/>
+                        <LoggedInRoute path='/logout' component={Logout}/>
+                        <LoggedInRoute path='/account/edit' component={EditAccount}/>
+                        <LoggedInRoute path='/edit/:categoryId' component={EditCategory}/>
+                        <LoggedInRoute path='/gif/create/:categoryId' component={CreateGif}/>
+                        <LoggedInRoute path='/gif/:gifId' component={Gif}/>
+                        <LoggedInRoute path='/category/:categoryId' component={Home}/>
+                        <LoggedInRoute exact path='/' component={Home}/>
+                        <Route path='/' render={() => <Redirect to={getCookieValue('auth') ? '/' : '/login'}/>}/>
+                    </Switch>
                     <Swal/>
                 </div>
             </div>
@@ -114,6 +103,14 @@ export default class App extends Component {
                 console.log(e);
                 this.setState({logout: true});
             }
+        }
+    }
+
+    componentDidUpdate() {
+        const authToken = getCookieValue('auth');
+        if (this.state.user && !authToken) {
+            // Happens after authToken has expired
+            this.setState({logout: true});
         }
     }
 }

@@ -52,6 +52,9 @@ export default class SignUp extends RouteBase {
                 body: JSON.stringify(body),
             });
 
+            if (!this.isComponentMounted) {
+                return;
+            }
             if (response.ok) {
                 app.data.user.username = username;
 
@@ -77,7 +80,10 @@ export default class SignUp extends RouteBase {
         if (this.state.isLoggingIn) {
             return (
                 <div className="center">
-                    <div className="spinner-border text-primary"/>
+                    <div>
+                        <div className="spinner-border text-primary"/>
+                    </div>
+                    <label>Signing up</label>
                 </div>
             );
         }

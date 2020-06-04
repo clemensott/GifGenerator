@@ -2,7 +2,7 @@
 import {app} from "../App";
 import {getLoggedOutNav} from "../helper/defaultNav";
 import RouteBase from "./RouteBase";
-import {getCookieValue, setCookie} from "../helper/cookies";
+import {deleteCookie, getCookieValue, setCookie} from "../helper/cookies";
 
 export default class Login extends RouteBase {
     constructor(props) {
@@ -47,6 +47,11 @@ export default class Login extends RouteBase {
                 body: JSON.stringify(body),
             });
 
+            if (!this.isComponentMounted) {
+                // if login was canceled than make sure that there is no auth token set by the API
+                deleteCookie('auth');
+                return;
+            }
             if (loginResponse.ok) {
                 const login = await loginResponse.json();
                 if (!getCookieValue('auth')) {
@@ -55,6 +60,12 @@ export default class Login extends RouteBase {
                 }
 
                 const userResponse = await fetch('/api/user');
+
+                if (!this.isComponentMounted) {
+                    // if login was canceled than make sure that there is no auth token set by the API
+                    deleteCookie('auth');
+                    return;
+                }
                 if (userResponse.ok) {
                     app.data.user = await userResponse.json();
                     this.props.history.push('/');
@@ -84,7 +95,10 @@ export default class Login extends RouteBase {
         if (this.state.isLoggingIn) {
             return (
                 <div className="center">
-                    <div className="spinner-border text-primary"/>
+                    <div>
+                        <div className="spinner-border text-primary"/>
+                    </div>
+                    <label>Loging in</label>
                 </div>
             );
         }

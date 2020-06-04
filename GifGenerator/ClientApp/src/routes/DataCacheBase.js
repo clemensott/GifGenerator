@@ -6,7 +6,6 @@ export default class DataCacheBase extends RouteBase {
     constructor(props) {
         super(props);
 
-        this.isComponentMounted = false;
         this.fetchPathId = null;
         this.fetchCategoryId = null;
         this.fetchGifId = null;
@@ -20,11 +19,6 @@ export default class DataCacheBase extends RouteBase {
 
     componentDidMount() {
         super.componentDidMount();
-        this.isComponentMounted = true;
-    }
-
-    componentWillUnmount() {
-        this.isComponentMounted = false;
     }
 
     setState(state, callback) {

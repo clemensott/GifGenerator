@@ -32,7 +32,10 @@ export default class Home extends DataCacheBase {
                 </div>
 
                 <div className={`center ${category ? 'd-none' : ''}`}>
-                    <div className="spinner-border text-primary"/>
+                    <div>
+                        <div className="spinner-border text-primary"/>
+                    </div>
+                    <label>Loading category</label>
                 </div>
             </div>
         );
