@@ -4,12 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace GifGenerator.Generator.FramesProvider
 {
     public abstract class BaseFramesProvider
     {
-        public abstract IEnumerable<Image> GetFrames(Stream stream, uint begin, uint count, uint step);
+        public abstract Task<IEnumerable<Image>> GetFrames(Stream stream, uint begin, uint count, uint step);
 
         protected static IEnumerable<Image> FilterFrames(IEnumerable<Image> frames, uint begin, uint count, uint step)
         {

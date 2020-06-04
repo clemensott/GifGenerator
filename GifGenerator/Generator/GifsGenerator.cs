@@ -26,7 +26,7 @@ namespace GifGenerator.Generator
                 IEnumerable<Image> images;
                 using (Stream stream = await GetStream(src, ref client))
                 {
-                    images = BaseFramesProvider.GetFramesProvider(src.Type)
+                    images = await BaseFramesProvider.GetFramesProvider(src.Type)
                         .GetFrames(stream, src.Begin, src.Count, src.Step);
                 }
 

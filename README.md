@@ -9,8 +9,9 @@ We created a prototype website where you can do following points:
 - You can log in
 - Browse gif categories
 - You can create/delete gif categories
+- Create gifs
 
-There are several API endpoints like /api/gif/create which are functional but not implemented in the website yet.
+There are some API endpoints like ```/api/category/{categoryId}/move/{destCategoryId}``` which are functional but not implemented in the website yet.
 
 # Authors
 Group 3
@@ -25,34 +26,54 @@ Repository: https://github.com/ozwoldFH/webserviceGifGenerator
 
 # How to start the project
 
-**Requirements to start project**
+### Requirements to start project
 
 - .NET code 2.1
 - npm
-- Firebase Realtime Token
-- Firebase Realtime Url
+- ffmpeg
+- Firebase Auth Email
+- Firebase Auth Password
+- Firebase Bucket Url
+- Firebase Database Url
+- Firebase Database Token
 
-**How to start**
+If you got this repository first hand then you probably don't have to worry about the Firebase credentials.
 
+## How to start
+
+#### Run npm install 
 Please go to the project folder  ```webserviceGifGenerator\GifGenerator\ClientApp``` and start following command:
 ```
 npm install
 ```
 
+#### Create launch settings 
+Make sure you have the settings file ```webserviceGifGenerator\GifGenerator\Properties\launchSettings.json```.
+If not use ```launchSettings.json.template```
+as template and enter the Firebase credentials.
 
-After that you can launch the project with Visual Studio or Rider or alternatively without an IDE.
+#### Get ffmpeg
+Download and copy ffmpeg to  ```webserviceGifGenerator\GifGenerator\ffmpeg.exe```.
+It is only needed to create GIFs from videos.
 
-*Start without IDE*: Go to ```\webserviceGifGenerator\GifGenerator``` and issue following command:
+#### Run the API
+
+##### With IDE
+Open ```webserviceGifGenerator\GifGenerator.sln``` Visual Studio or JetBrains Rider.
+
+##### Without IDE
+Go to ```\webserviceGifGenerator\GifGenerator``` and use following command:
 ```
 dotnet run
 ```
 
+#### Open Website
 After you started the project you can access the website with this URL:
 ```
 http://localhost:52081
 ```
 
-
+## API call example
 You can call one of the API endpoint with following post request:
 
 ```
