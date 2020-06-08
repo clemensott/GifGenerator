@@ -7,7 +7,7 @@ import './CreateGif.css'
 import {app} from "../App";
 import {swal} from "../components/Swal";
 import addCategory from "../helper/addCategory";
-import {getLoggedInNav} from "../helper/defaultNav";
+import {getLoggedInNav, getLoggedOutNav} from "../helper/defaultNav";
 
 export default class CreateGif extends DataCacheBase {
     constructor(props) {
@@ -58,11 +58,31 @@ export default class CreateGif extends DataCacheBase {
         return true;
     }
 
+    download() {
+        window.location.assign(this.state.previewUrl);
+        return;
+        const a = document.createElement("a");
+        document.body.appendChild(a);
+        a.style = "display: none";
+
+        const url = this.state.previewUrl;
+        const id =  url.substr(url.lastIndexOf('/') + 1);
+        a.href = this.state.previewUrl;
+        a.download = `${id}.gif`;
+        a.click();
+    }
+
     async loadPreview() {
         if (!this.validate()) return;
 
         try {
-            this.setState({isLoading: true, loadingStatus: 'Processing'});
+            if (this.state.previewUrl) URL.revokeObjectURL(this.state.previewUrl);
+
+            this.setState({
+                isLoading: true,
+                loadingStatus: 'Processing',
+                previewUrl: null,
+            });
             const response = await fetch('/api/gif/create', {
                 method: 'POST',
                 headers: {
@@ -243,14 +263,19 @@ export default class CreateGif extends DataCacheBase {
                     </div>
 
                     <div className="form-row pl-2">
-                        <button className="btn btn-primary float-left"
+                        <button className={`btn btn-primary float-left mr-2 ${categoryId ? '' : 'd-none'}`}
                                 onClick={() => this.addGif()}>
                             Add
                         </button>
 
-                        <button className="btn btn-secondary float-left ml-2"
+                        <button className={`btn float-left mr-2 ${categoryId ? 'btn-secondary' : 'btn-primary'}`}
                                 onClick={() => this.loadPreview()}>
                             Preview
+                        </button>
+
+                        <button className={`btn btn-success float-left mr-2 ${this.state.previewUrl ? '' : 'd-none'}`}
+                                onClick={() => this.download()}>
+                            Download
                         </button>
                     </div>
                 </div>
@@ -277,25 +302,28 @@ export default class CreateGif extends DataCacheBase {
 
     getNavProps() {
         const categoryId = this.getCurrentCategoryId();
-        return getLoggedInNav(
-            getPathFromCache(app.cache.categories, categoryId, true),
-            [{
-                title: 'Add GIF',
-                href: `/gif/create/${categoryId}`,
-                icon: 'fa-plus',
-            }, {
-                title: 'Add category',
-                onClick: () => addCategory(categoryId),
-                icon: 'fa-folder-plus',
-            }, {
-                title: 'Edit category',
-                href: `/edit/${categoryId}`,
-                icon: 'fa-edit',
-            }],
-        );
+        if (categoryId) {
+            return getLoggedInNav(
+                getPathFromCache(app.cache.categories, categoryId, true),
+                [{
+                    title: 'Add GIF',
+                    href: `/gif/create/${categoryId}`,
+                    icon: 'fa-plus',
+                }, {
+                    title: 'Add category',
+                    onClick: () => addCategory(categoryId),
+                    icon: 'fa-folder-plus',
+                }, {
+                    title: 'Edit category',
+                    href: `/edit/${categoryId}`,
+                    icon: 'fa-edit',
+                }],
+            );
+        }
+        return getLoggedOutNav();
     }
 
     getCurrentCategoryId() {
-        return this.props.match.params.categoryId || (app.data.user && app.data.user.rootCategoryId);
+        return this.props.match.params.categoryId;
     }
 }

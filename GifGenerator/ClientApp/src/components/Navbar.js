@@ -20,7 +20,7 @@ export class Navbar extends Component {
             return (
                 <div key={icon.title} className="nav-icon" title={icon.title}>
                     <Link to={icon.href}>
-                        <i className={`fas ${icon.icon} fa-2x pr-3`}/>
+                        <i className={`fas ${icon.icon} fa-2x pl-3`}/>
                     </Link>
                 </div>
             )

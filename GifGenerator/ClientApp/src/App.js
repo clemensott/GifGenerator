@@ -73,6 +73,7 @@ export default class App extends Component {
                         <LoggedInRoute path='/account/edit' component={EditAccount}/>
                         <LoggedInRoute path='/edit/:categoryId' component={EditCategory}/>
                         <LoggedInRoute path='/gif/create/:categoryId' component={CreateGif}/>
+                        <Route path='/gif/create/' component={CreateGif}/>
                         <LoggedInRoute path='/gif/:gifId' component={Gif}/>
                         <LoggedInRoute path='/category/:categoryId' component={Home}/>
                         <LoggedInRoute exact path='/' component={Home}/>

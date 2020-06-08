@@ -1,6 +1,11 @@
 ﻿export function getLoggedOutNav() {
     return {
         path: {current: 'GIFs'},
+        customIcons: [{
+            title: 'Create GIF',
+            href: '/gif/create',
+            icon: 'fa-plus',
+        }],
         buttons: [{
             classes: 'btn btn-light',
             text: 'Login',
