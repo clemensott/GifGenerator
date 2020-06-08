@@ -104,7 +104,10 @@ export default class Login extends RouteBase {
         }
 
         return (
-            <div className="pt-2">
+            <form className="pt-2" onSubmit={async e => {
+                e.preventDefault();
+                await this.login();
+            }}>
                 <div className="form-group">
                     <label>Username:</label>
                     <input ref={this.usernameRef} type="text" defaultValue={this.state.username}
@@ -131,11 +134,10 @@ export default class Login extends RouteBase {
                     </label>
                 </div>
 
-                <button className="btn bg-primary text-light float-left"
-                        onClick={async () => await this.login()}>
+                <button className="btn bg-primary text-light float-left" type="submit">
                     Login
                 </button>
-            </div>
+            </form>
         );
     }
 

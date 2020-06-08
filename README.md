@@ -28,7 +28,7 @@ Repository: https://github.com/ozwoldFH/webserviceGifGenerator
 
 ### Requirements to start project
 
-- .NET code 2.1
+- .NET code 2.1 or newer
 - npm
 - ffmpeg
 - Firebase Auth Email
@@ -37,7 +37,7 @@ Repository: https://github.com/ozwoldFH/webserviceGifGenerator
 - Firebase Database Url
 - Firebase Database Token
 
-If you got this repository first hand then you probably don't have to worry about the Firebase credentials.
+If you got this repository first hand (not from Github) then you probably don't have to worry about the Firebase credentials.
 
 ## How to start
 
