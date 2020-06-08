@@ -4,8 +4,7 @@ import {getCookieValue} from "../helper/cookies";
 
 export default function ({isPrivate, component: Component, redirectTo, ...rest}) {
     const authToken = getCookieValue('auth');
-    if ((authToken && !isPrivate) || (authToken && !isPrivate)) {
-        console.log('auth redirect to:', redirectTo);
+    if ((authToken && !isPrivate) || (!authToken && isPrivate)) {
         return (
             <Redirect to={redirectTo}/>
         )
