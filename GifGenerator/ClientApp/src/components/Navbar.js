@@ -27,7 +27,7 @@ export class Navbar extends Component {
         }
         return (
             <div key={icon.title} className="nav-click" title={icon.title}>
-                <i className={`fas ${icon.icon} fa-2x pr-3`} onClick={icon.onClick}/>
+                <i className={`fas ${icon.icon} fa-2x pl-3`} onClick={icon.onClick}/>
             </div>
         )
     }

@@ -96,7 +96,7 @@ export default class EditCategory extends DataCacheBase {
 
     async deleteCategory() {
         const result = await swal.show({
-            title: 'Are you sure you?',
+            title: 'Are you sure?',
             text: 'You are deleting all gifs and sub categories. Once deleted, you will not be able to recover all of this!',
             icon: 'fa-exclamation-triangle',
             color: 'danger',

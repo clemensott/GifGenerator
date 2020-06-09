@@ -1,9 +1,16 @@
 ﻿.gif-item-container {
     height: 500px;
+    position: relative;
 }
 
 .gif-item {
     width: 100%;
     height: 100%;
     object-fit: contain;
+}
+
+.gif-delete-button {
+    position: absolute;
+    top: 0;
+    right: 0;
 }

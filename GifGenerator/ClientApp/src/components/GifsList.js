@@ -29,7 +29,7 @@ function groupGifs(gifs) {
 
 function renderGifItem(gif, width) {
     return (
-        <div key={gif.id} className="gifs-list-column" style={{width: width}}>
+        <div key={gif.id} className="gifs-list-column p-1" style={{width}}>
             <GifListItem gif={gif}/>
         </div>
     );

@@ -17,6 +17,7 @@ import LoggedInRoute from "./Routing/LoggedInRoute";
 export const app = {
     data: null,
     cache: null,
+    rerender: () => null,
 };
 
 export default class App extends Component {
@@ -28,6 +29,7 @@ export default class App extends Component {
         this.state = {
             user: null,
             logout: false,
+            rerender: false, // only used to rerender app
         }
 
         app.data = this.state;
@@ -36,6 +38,7 @@ export default class App extends Component {
             categories: {},
             gifs: {},
         }
+        app.rerender = () => this.setState({rerender: true});
     }
 
     setState(state, callback) {

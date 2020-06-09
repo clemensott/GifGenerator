@@ -200,7 +200,7 @@ namespace GifGenerator.Controllers
 
             if (!hasCategory) return NotFound();
 
-            await FbDbHelper.Client.DeleteCategoryChildAsync(meta.CategoryId, gifId);
+            await FbDbHelper.Client.CategoryGifQuery(meta.CategoryId, gifId).DeleteAsync();
             await FbDbHelper.Client.GifQuery(gifId).DeleteAsync();
 
             return Ok();
