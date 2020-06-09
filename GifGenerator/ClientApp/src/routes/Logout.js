@@ -23,23 +23,22 @@ export default class Logout extends RouteBase {
     async componentDidMount() {
         super.componentDidMount();
 
+        const authToken = getCookieValue('auth');
+        deleteCookie('auth');
         app.data.user = null;
         app.cache.categories = {};
         app.cache.categoryData = {};
         app.cache.gifs = {};
 
         try {
-            const authToken = getCookieValue('auth');
             if (authToken) {
-                await fetch('/api/auth/logout', {
-                    method: 'POST',
+                await fetch(`/api/auth/logout/${authToken}`, {
+                    method: 'DELETE',
                 });
             }
         } catch (e) {
             console.log(e);
         }
-
-        deleteCookie('auth');
 
         if (this.isComponentMounted) {
             this.props.history.push('/login');

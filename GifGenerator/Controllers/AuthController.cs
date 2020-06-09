@@ -48,5 +48,14 @@ namespace GifGenerator.Controllers
             Response.Cookies.Delete(UserHelper.CookieName);
             return Ok();
         }
+
+        [HttpDelete("logout/{token}")]
+        public async Task<ActionResult> LogoutToken(string token)
+        {
+            if (!FbDbHelper.IsValidKey(token)) return BadRequest("Token is not valid");
+
+            await FbDbHelper.Client.LogoutAsync(token);
+            return Ok();
+        }
     }
 }
