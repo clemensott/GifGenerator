@@ -7,10 +7,17 @@ import getPathFromCache from "../helper/getPathFromCache";
 import {app} from "../App";
 import addCategory from "../helper/addCategory";
 import {getLoggedInNav} from "../helper/defaultNav";
+import uploadGif from "../helper/uploadGif";
 
 export default class Home extends DataCacheBase {
     constructor(props) {
         super(props);
+
+        this.state = {
+            ...this.state,
+            isLoading: false,
+            loadingText: null,
+        };
     }
 
     render() {
@@ -23,7 +30,7 @@ export default class Home extends DataCacheBase {
 
         return (
             <div className="pt-1 pb-2">
-                <div className={category ? '' : 'd-none'}>
+                <div className={category && !this.state.isLoading ? '' : 'd-none'}>
                     <ChildrenList children={category ? category.children : []}/>
                     <GifsList gifs={category ? category.gifs : []}/>
                     <h3 className={`p-2 ${isEmpty ? '' : 'd-none'}`}>
@@ -31,11 +38,13 @@ export default class Home extends DataCacheBase {
                     </h3>
                 </div>
 
-                <div className={`center ${category ? 'd-none' : ''}`}>
+                <div className={`center ${category && !this.state.isLoading ? 'd-none' : ''}`}>
                     <div>
                         <div className="spinner-border text-primary"/>
                     </div>
-                    <label>Loading category</label>
+                    <label>
+                        {this.state.isLoading ? this.state.loadingText : 'Loading category'}
+                    </label>
                 </div>
             </div>
         );
@@ -56,12 +65,16 @@ export default class Home extends DataCacheBase {
         return getLoggedInNav(
             getPathFromCache(app.cache.categories, categoryId, false),
             [{
-                title: 'Add GIF',
+                title: 'Create GIF',
                 href: `/gif/create/${categoryId}`,
                 icon: 'fa-plus',
             }, {
+                title: 'Upload GIF',
+                onClick: () => uploadGif(categoryId, this),
+                icon: 'fa-upload',
+            }, {
                 title: 'Add category',
-                onClick: () => addCategory(categoryId),
+                onClick: () => addCategory(categoryId, this),
                 icon: 'fa-folder-plus',
             }, {
                 title: 'Edit category',

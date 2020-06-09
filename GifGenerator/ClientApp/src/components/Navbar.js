@@ -29,7 +29,7 @@ export class Navbar extends Component {
             <div key={icon.title} className="nav-click" title={icon.title}>
                 <i className={`fas ${icon.icon} fa-2x pl-3`} onClick={icon.onClick}/>
             </div>
-        )
+        );
     }
 
     renderButtons(btn) {
@@ -40,28 +40,28 @@ export class Navbar extends Component {
                         <button className={`${btn.classes}`}>{btn.text}</button>
                     </Link>
                 </div>
-            )
+            );
         }
         return (
             <div key={btn.text} className="pl-2 nav-btn">
                 <button className={`${btn.classes}`} onClick={btn.onClick}>{btn.text}</button>
             </div>
-        )
+        );
     }
 
     render() {
         const nav = this.state.nav;
         if (!nav) return null;
 
-        const customIcons = nav.customIcons && nav.customIcons.map(this.renderCustomIcon) || [];
-        const customButtons = nav.buttons && nav.buttons.map(this.renderButtons) || [];
+        const customIcons = (nav.customIcons && nav.customIcons.map(this.renderCustomIcon)) || [];
+        const customButtons = (nav.buttons && nav.buttons.map(this.renderButtons)) || [];
 
         return (
             <div className="nav-bar-container">
                 <div className="container">
                     <div className="nav-path">
-                        <PathBar links={nav.path && nav.path.links || []}
-                                 current={nav.path && nav.path.current || null}/>
+                        <PathBar links={(nav.path && nav.path.links) || []}
+                                 current={(nav.path && nav.path.current) || null}/>
                     </div>
                     <div className="nav-actions">
                         {customIcons}

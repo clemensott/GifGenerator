@@ -1,5 +1,4 @@
 ﻿import React from 'react';
-import {Redirect} from "react-router-dom";
 import {app} from "../App";
 import RouteBase from "./RouteBase";
 import {getLoggedOutNav} from "../helper/defaultNav";

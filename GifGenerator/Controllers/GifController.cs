@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Firebase.Database.Query;
@@ -9,6 +10,8 @@ using GifGenerator.Models.Gifs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Gif;
 
 namespace GifGenerator.Controllers
 {
@@ -128,6 +131,45 @@ namespace GifGenerator.Controllers
             await FbDbHelper.Client.CategoryGifQuery(categoryId, gifId).PutAsync();
 
             return gifId;
+        }
+
+        [HttpPost("add/{categoryId}")]
+        [DisableRequestSizeLimit]
+        public async Task<ActionResult<GifInfo>> UploadGif(string categoryId, [FromBody] string base64)
+        {
+            Size? gifSize;
+            byte[] data = Convert.FromBase64String(base64);
+
+            try
+            {
+                using (Image gif = Image.Load(data, out IImageFormat format))
+                {
+                    gifSize = format is GifFormat ? (Size?)gif.Size() : null;
+                }
+            }
+            catch
+            {
+                gifSize = null;
+            }
+
+            if (!gifSize.HasValue) return BadRequest("Data is not a GIF");
+
+            Gif meta = new Gif()
+            {
+                CategoryId = categoryId,
+                PixelSize = gifSize.Value,
+                FileSize = data.Length
+            };
+            string gifId = await FbDbHelper.Client.AddGifAsync(meta);
+            
+            using (MemoryStream stream = new MemoryStream(data))
+            {
+                await FbSgHelper.Client.PutGifAsync(gifId, stream);
+            }
+            
+            await FbDbHelper.Client.CategoryGifQuery(categoryId, gifId).PutAsync();
+
+            return new GifInfo(gifId, meta);
         }
 
         [HttpGet("{gifId}/meta")]

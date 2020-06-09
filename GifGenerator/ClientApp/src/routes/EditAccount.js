@@ -119,7 +119,10 @@ export default class EditAccount extends DataCacheBase {
                 </div>
 
                 <div className={`center ${this.state.isChangingPassword ? '' : 'd-none'}`}>
-                    <div className="spinner-border text-primary"/>
+                    <div>
+                        <div className="spinner-border text-primary"/>
+                    </div>
+                    <label>Changing password</label>
                 </div>
             </div>
         );
@@ -147,7 +150,7 @@ export default class EditAccount extends DataCacheBase {
     getPath() {
         return {
             links: [{
-                href: `/${app.data.user && app.data.user.rootCategoryId || ''}`,
+                href: `/${(app.data.user && app.data.user.rootCategoryId) || ''}`,
                 text: 'GIFs',
             }],
         }

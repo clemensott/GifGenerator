@@ -13,9 +13,9 @@ export class Swal extends Component {
         this.state = {
             swal: null,
         };
-        
+
         swal.show = props => this.onShowSwal(new SwalProps(props));
-        this.onSwalResolveListener= this.onSwalResolveListener.bind(this);
+        this.onSwalResolveListener = this.onSwalResolveListener.bind(this);
     }
 
     onShowSwal(swal) {
@@ -31,8 +31,7 @@ export class Swal extends Component {
 
     onSwalResolveListener() {
         this.state.swal.removeOnResolveListener(this.onSwalResolveListener);
-        this.state.swal = null;
-        this.setState({swal:null});
+        this.setState({swal: null});
     }
 
     renderButton(btn) {
@@ -67,7 +66,7 @@ export class Swal extends Component {
         return (
             <div>
                 <div className="modal fade show swal-container" tabIndex="-1"
-                     onClick={(e) => {
+                     onClick={e => {
                          if (e.target.classList.contains('swal-container')) {
                              swal.resolve('close', this.inputRef.current.value);
                          }
@@ -89,9 +88,12 @@ export class Swal extends Component {
                                 <p className={`text-secondary ${swal.textSecondary ? '' : 'd-none'}`}>
                                     <small>{swal.textSecondary}</small>
                                 </p>
-                                <input ref={this.inputRef} type={swal.input && swal.input.type || 'text'}
+                                <input ref={this.inputRef} type={(swal.input && swal.input.type) || 'text'}
                                        className={`form-control ${swal.input ? '' : 'd-none'}`}
                                        placeholder={swal.input && swal.input.placeholder}/>
+                                <div className="input-group">
+                                    {swal.content}
+                                </div>
                             </div>
                             <div className="modal-footer">
                                 {buttons}
@@ -133,13 +135,14 @@ function getSwalShowFunction(swal) {
     }
 }
 
-export function SwalProps({title, icon, color, text, textSecondary, input, buttons}) {
+export function SwalProps({title, icon, color, text, textSecondary, input, content, buttons}) {
     this.title = title;
     this.icon = icon;
     this.color = color;
     this.text = text;
     this.textSecondary = textSecondary;
     this.input = input;
+    this.content = content;
     this.buttons = buttons;
 
     this.onResolveListeners = [];

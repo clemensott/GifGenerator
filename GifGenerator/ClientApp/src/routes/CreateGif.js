@@ -8,6 +8,7 @@ import {app} from "../App";
 import {swal} from "../components/Swal";
 import addCategory from "../helper/addCategory";
 import {getLoggedInNav, getLoggedOutNav} from "../helper/defaultNav";
+import uploadGif from "../helper/uploadGif";
 
 export default class CreateGif extends DataCacheBase {
     constructor(props) {
@@ -18,7 +19,7 @@ export default class CreateGif extends DataCacheBase {
         this.state = {
             ...this.state,
             isLoading: false,
-            loadingStatus: null,
+            loadingText: null,
             redirect: false,
             lastUpdated: null, // only set to rerender
             previewUrl: null,
@@ -59,14 +60,12 @@ export default class CreateGif extends DataCacheBase {
     }
 
     download() {
-        window.location.assign(this.state.previewUrl);
-        return;
         const a = document.createElement("a");
         document.body.appendChild(a);
         a.style = "display: none";
 
         const url = this.state.previewUrl;
-        const id =  url.substr(url.lastIndexOf('/') + 1);
+        const id = url.substr(url.lastIndexOf('/') + 1);
         a.href = this.state.previewUrl;
         a.download = `${id}.gif`;
         a.click();
@@ -80,7 +79,7 @@ export default class CreateGif extends DataCacheBase {
 
             this.setState({
                 isLoading: true,
-                loadingStatus: 'Processing',
+                loadingText: 'Processing',
                 previewUrl: null,
             });
             const response = await fetch('/api/gif/create', {
@@ -92,7 +91,7 @@ export default class CreateGif extends DataCacheBase {
             });
 
             if (response.ok) {
-                this.setState({isLoading: true, loadingStatus: 'Fetching'});
+                this.setState({isLoading: true, loadingText: 'Fetching'});
 
                 const blob = await response.blob();
                 const previewUrl = URL.createObjectURL(blob);
@@ -126,7 +125,7 @@ export default class CreateGif extends DataCacheBase {
         if (!this.validate()) return;
 
         try {
-            this.setState({isLoading: true, loadingStatus: 'Processing'});
+            this.setState({isLoading: true, loadingText: 'Processing'});
             const url = `/api/gif/create/add/${this.getCurrentCategoryId()}`;
             const response = await fetch(url, {
                 method: 'POST',
@@ -207,7 +206,7 @@ export default class CreateGif extends DataCacheBase {
         const sources = this.create.sources.map((source, index) => this.renderSource(source, index));
 
         const currentCategoryName = app.cache.categories[categoryId] && app.cache.categories[categoryId].name;
-        if (currentCategoryName) document.title = `Add GIF - ${currentCategoryName}`;
+        document.title = currentCategoryName ? `Create GIF - ${currentCategoryName}` : 'Create GIF';
 
         return (
             <div className="pt-3 pb-3">
@@ -284,7 +283,7 @@ export default class CreateGif extends DataCacheBase {
                     <div>
                         <div className="spinner-border text-primary"/>
                     </div>
-                    <label>{this.state.loadingStatus}</label>
+                    <label>{this.state.loadingText}</label>
                 </div>
             </div>
         );
@@ -306,12 +305,19 @@ export default class CreateGif extends DataCacheBase {
             return getLoggedInNav(
                 getPathFromCache(app.cache.categories, categoryId, true),
                 [{
-                    title: 'Add GIF',
+                    title: 'Create GIF',
                     href: `/gif/create/${categoryId}`,
                     icon: 'fa-plus',
                 }, {
+                    title: 'Upload GIF',
+                    onClick: async () => {
+                        const gif = await uploadGif(categoryId, this);
+                        if (gif) this.props.history.push(`/gif/${gif.id}`);
+                    },
+                    icon: 'fa-upload',
+                }, {
                     title: 'Add category',
-                    onClick: () => addCategory(categoryId),
+                    onClick: () => addCategory(categoryId, this),
                     icon: 'fa-folder-plus',
                 }, {
                     title: 'Edit category',

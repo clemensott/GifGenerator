@@ -1,4 +1,4 @@
-﻿import React,{Component} from "react";
+﻿import {Component} from "react";
 import {nav} from "../components/Navbar";
 
 export default class RouteBase extends Component {

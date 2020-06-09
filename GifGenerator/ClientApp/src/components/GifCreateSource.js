@@ -4,6 +4,7 @@ import './GifCreateSource.css'
 import {sourceMediaTypes} from "../constants";
 import cropping from "../helper/cropping";
 import {swal} from "./Swal";
+import getBase64FromDataUrl from "../helper/getBase64FromDataUrl";
 
 const dataSource = {
     url: 'URL',
@@ -194,17 +195,14 @@ export default class GifCreateSource extends Component {
     }
 
     onFileLoaded(e) {
-        const key = ';base64,';
-        const index = e.target.result.indexOf(key);
-        const data = e.target.result.substring(index + key.length);
+        const data = getBase64FromDataUrl(e.target.result);
 
         if (this.state.dataSource === dataSource.file) this.props.source.data = data;
         this.setState({fileData: data, isLoadingFile: false});
     }
 
-    onFileError(e) {
+    onFileError() {
         this.setState({fileData: null, isLoadingFile: false});
-
     }
 
     formatFile(file) {

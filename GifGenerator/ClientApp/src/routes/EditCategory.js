@@ -6,6 +6,7 @@ import {app} from "../App";
 import {swal} from "../components/Swal";
 import addCategory from "../helper/addCategory";
 import {getLoggedInNav} from "../helper/defaultNav";
+import uploadGif from "../helper/uploadGif";
 
 export default class EditCategory extends DataCacheBase {
     constructor(props) {
@@ -14,6 +15,7 @@ export default class EditCategory extends DataCacheBase {
         this.state = {
             ...this.state,
             isLoading: false,
+            loadingText: null,
             changeNameSuccessfully: false,
             changeNameError: null,
             redirectToHome: false,
@@ -28,6 +30,7 @@ export default class EditCategory extends DataCacheBase {
         try {
             this.setState({
                 isLoading: true,
+                loadingText: 'Changing name',
                 changeNameSuccessfully: false,
                 changeNameError: null,
             });
@@ -48,6 +51,7 @@ export default class EditCategory extends DataCacheBase {
                 app.cache.categories[category.id].name = newName;
                 this.setState({
                     isLoading: false,
+                    loadingText: null,
                     changeNameSuccessfully: true,
                     changeNameError: null,
                 });
@@ -55,6 +59,7 @@ export default class EditCategory extends DataCacheBase {
                 const changeNameError = await response.text();
                 this.setState({
                     isLoading: false,
+                    loadingText: null,
                     changeNameSuccessfully: false,
                     changeNameError,
                 });
@@ -62,6 +67,7 @@ export default class EditCategory extends DataCacheBase {
         } catch (e) {
             this.setState({
                 isLoading: false,
+                loadingText: null,
                 changeNameSuccessfully: false,
                 changeNameError: e.message,
             });
@@ -113,6 +119,7 @@ export default class EditCategory extends DataCacheBase {
         const categoryId = this.getCurrentCategoryId();
         this.setState({
             isLoading: true,
+            loadingText: 'Deleting',
         });
         try {
             await fetch('/api/category/' + categoryId, {method: 'DELETE'});
@@ -123,6 +130,7 @@ export default class EditCategory extends DataCacheBase {
         this.deleteCategoryFromCache(categoryId);
         this.setState({
             isLoading: false,
+            loadingText: null,
             redirectToHome: true
         });
     }
@@ -168,7 +176,10 @@ export default class EditCategory extends DataCacheBase {
 
                 </div>
                 <div className={`center ${this.state.isLoading ? '' : 'd-none'}`}>
-                    <div className="spinner-border text-primary"/>
+                    <div>
+                        <div className="spinner-border text-primary"/>
+                    </div>
+                    <label>{this.state.loadingText}</label>
                 </div>
             </div>
         );
@@ -189,12 +200,19 @@ export default class EditCategory extends DataCacheBase {
         return getLoggedInNav(
             getPathFromCache(app.cache.categories, categoryId, true),
             [{
-                title: 'Add GIF',
+                title: 'Create GIF',
                 href: `/gif/create/${categoryId}`,
                 icon: 'fa-plus',
             }, {
+                title: 'Upload GIF',
+                onClick: async () => {
+                    const gif = await uploadGif(categoryId, this);
+                    if (gif) this.props.history.push(`/gif/${gif.id}`);
+                },
+                icon: 'fa-upload',
+            }, {
                 title: 'Add category',
-                onClick: () => addCategory(categoryId),
+                onClick: () => addCategory(categoryId, this),
                 icon: 'fa-folder-plus',
             }, {
                 title: 'Edit category',

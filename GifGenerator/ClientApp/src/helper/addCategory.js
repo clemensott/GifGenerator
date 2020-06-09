@@ -1,7 +1,7 @@
 ﻿import {swal} from "../components/Swal";
 import {app} from "../App";
 
-export default async function addCategory(parentCategoryId) {
+export default async function addCategory(parentCategoryId, page) {
     const parentCategory = app.cache.categories[parentCategoryId];
     const result = await swal.show({
         title: `Add category to: ${parentCategory && parentCategory.name}`,
@@ -20,6 +20,7 @@ export default async function addCategory(parentCategoryId) {
     const name = result.value;
 
     try {
+        page.setState({isLoading: true, loadingText: 'Adding category'});
         const url = parentCategoryId ? `/api/category/${parentCategoryId}/create` : '/api/category/create';
         const response = await fetch(url, {
             method: 'POST',
@@ -47,17 +48,9 @@ export default async function addCategory(parentCategoryId) {
                 });
             }
 
-            this.setState({
-                categoryId: parentCategoryId,
-            })
-
-            await swal.show({
-                title: 'Category added',
-                icon: 'fa-check-circle',
-                color: 'success',
-                buttons: 'Ok',
-            });
+            page.setState({isLoading: false});
         } else {
+            page.setState({isLoading: false});
             console.log(await response.json());
             await swal.show({
                 title: 'Error',
@@ -68,6 +61,7 @@ export default async function addCategory(parentCategoryId) {
             });
         }
     } catch (e) {
+        page.setState({isLoading: false});
         console.log(e);
         await swal.show({
             title: 'Exception',

@@ -1,4 +1,4 @@
-﻿﻿function getCookieValue(name) {
+﻿function getCookieValue(name) {
     const cookies = document.cookie.split(";");
     for (let i = 0; i < cookies.length; i++) {
         const pair = cookies[i].split('=');

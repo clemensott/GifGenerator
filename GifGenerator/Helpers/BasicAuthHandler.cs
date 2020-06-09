@@ -20,6 +20,7 @@ namespace GifGenerator.Helpers
         {
             if (!Request.TryGetToken(out string token))
             {
+                System.Diagnostics.Debug.WriteLine("No Auth: " + Request.Path);
                 return AuthenticateResult.NoResult();
             }
 

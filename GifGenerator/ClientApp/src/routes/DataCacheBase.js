@@ -1,5 +1,4 @@
-﻿import React from "react";
-import {app} from "../App";
+﻿import {app} from "../App";
 import RouteBase from "./RouteBase";
 
 export default class DataCacheBase extends RouteBase {

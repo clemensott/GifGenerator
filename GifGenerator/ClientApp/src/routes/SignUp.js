@@ -1,5 +1,4 @@
 ﻿import React from 'react';
-import {app} from "../App";
 import {getLoggedOutNav} from "../helper/defaultNav";
 import RouteBase from "./RouteBase";
 
@@ -56,8 +55,6 @@ export default class SignUp extends RouteBase {
                 return;
             }
             if (response.ok) {
-                app.data.user.username = username;
-
                 this.props.history.push('/login');
             } else {
                 const error = await response.text();

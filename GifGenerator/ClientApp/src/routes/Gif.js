@@ -6,6 +6,7 @@ import {app} from "../App";
 import './Gif.css'
 import {getLoggedInNav} from "../helper/defaultNav";
 import {swal} from "../components/Swal";
+import uploadGif from "../helper/uploadGif";
 
 export default class Gif extends DataCacheBase {
     constructor(props) {
@@ -41,8 +42,12 @@ export default class Gif extends DataCacheBase {
                 const category = app.cache.categoryData[categoryId];
                 let gifIndex = null;
                 if (category) {
-                    gifIndex = category.gifs.findIndex(gif => gif.id === gifId);
-                    if (gifIndex > -1) category.gifs.splice(gifIndex, 1);
+                    for (let i = 0; i < category.gifs.length; i++) {
+                        if (category.gifs[i].id === gifId) {
+                            gifIndex = i;
+                            category.gifs.splice(gifIndex, 1);
+                        }
+                    }
                 }
 
                 delete app.cache.gifs[gifId];
@@ -140,9 +145,16 @@ export default class Gif extends DataCacheBase {
         return getLoggedInNav(
             getPathFromCache(app.cache.categories, categoryId, true),
             [{
-                title: 'Add GIF',
+                title: 'Create GIF',
                 href: `/gif/create/${categoryId}`,
                 icon: 'fa-plus',
+            }, {
+                title: 'Upload GIF',
+                onClick: async () => {
+                    const gif = await uploadGif(categoryId, this);
+                    if (gif) this.props.history.push(`/gif/${gif.id}`);
+                },
+                icon: 'fa-upload',
             }, {
                 title: 'Edit category',
                 href: `/edit/${categoryId}`,

@@ -39,9 +39,9 @@ export default class GifListItem extends Component {
 
             if (response.ok) {
                 const category = app.cache.categoryData[this.props.gif.categoryId];
-                const gifIndex = category.gifs.findIndex(gif => gif.id === gifId);
-
-                if (gifIndex > -1) category.gifs.splice(gifIndex, 1);
+                for (let i = 0; i < category.gifs.length; i++) {
+                    if (category.gifs[i].id === gifId) category.gifs.splice(i, 1);
+                }
 
                 delete app.cache.gifs[gifId];
                 this.setState({isDeleting: false});
