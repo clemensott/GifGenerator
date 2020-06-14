@@ -9,6 +9,7 @@ import {swal} from "../components/Swal";
 import addCategory from "../helper/addCategory";
 import {getLoggedInNav, getLoggedOutNav} from "../helper/defaultNav";
 import uploadGif from "../helper/uploadGif";
+import {getCookieValue} from "../helper/cookies";
 
 export default class CreateGif extends DataCacheBase {
     constructor(props) {
@@ -301,7 +302,7 @@ export default class CreateGif extends DataCacheBase {
 
     getNavProps() {
         const categoryId = this.getCurrentCategoryId();
-        if (categoryId) {
+        if (getCookieValue('auth')) {
             return getLoggedInNav(
                 getPathFromCache(app.cache.categories, categoryId, true),
                 [{

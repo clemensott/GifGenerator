@@ -506,6 +506,7 @@ export default class GifCreateSource extends Component {
     componentWillUnmount() {
         this.fileReader.onload = null;
         this.fileReader.onerror = null;
+        this.fileReader.abort();
 
         if (this.state.fileUrl) URL.revokeObjectURL(this.state.fileUrl);
     }

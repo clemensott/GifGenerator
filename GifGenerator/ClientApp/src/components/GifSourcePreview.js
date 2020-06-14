@@ -103,5 +103,6 @@ export default class GifSourcePreview extends Component {
 
     componentWillUnmount() {
         this.fileReader.onload = null;
+        this.fileReader.abort();
     }
 }
