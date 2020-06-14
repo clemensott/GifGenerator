@@ -18,11 +18,7 @@ namespace GifGenerator.Helpers
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            if (!Request.TryGetToken(out string token))
-            {
-                System.Diagnostics.Debug.WriteLine("No Auth: " + Request.Path);
-                return AuthenticateResult.NoResult();
-            }
+            if (!Request.TryGetToken(out string token)) return AuthenticateResult.NoResult();
 
             Login login = string.IsNullOrWhiteSpace(token)
                 ? null

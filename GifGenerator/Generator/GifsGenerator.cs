@@ -65,7 +65,17 @@ namespace GifGenerator.Generator
         {
             if (!string.IsNullOrWhiteSpace(src.Data))
             {
-                Stream stream = new MemoryStream(Convert.FromBase64String(src.Data));
+                byte[] data;
+                try
+                {
+                    data = Convert.FromBase64String(src.Data);
+                }
+                catch (Exception e)
+                {
+                    throw new BadRequestException("Data is not in base64 format", e);
+                }
+
+                Stream stream = new MemoryStream(data);
                 return Task.FromResult(stream);
             }
 
@@ -77,7 +87,7 @@ namespace GifGenerator.Generator
         private static async Task<Stream> RunRequest(HttpClient client, GifCreateSource src)
         {
             if (!string.IsNullOrWhiteSpace(src.Url)) return await client.GetStreamAsync(src.Url);
-            if (src.CustomRequest == null) throw new BadRequestException("No data source");
+            if (src.CustomRequest == null) throw new BadRequestException("No data source provided");
 
             HttpResponseMessage response = await client.SendAsync(GetHttpRequest(src.CustomRequest));
             if (!response.IsSuccessStatusCode) throw new BadRequestException("Requesting data was not successful");

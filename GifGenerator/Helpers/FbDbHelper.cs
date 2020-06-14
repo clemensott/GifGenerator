@@ -13,7 +13,7 @@ namespace GifGenerator.Helpers
     /// <summary>
     /// Firebase Realtime Database Helper: Provides a FirebaseClient and extension methods to perform commen requests.
     /// </summary>
-    public static class FbDbHelper
+    internal static class FbDbHelper
     {
         private const string LoginBaseChild = "Login";
         private static readonly char[] invalidKeyCharacters = GetInvalidKeyCharacters().ToArray();

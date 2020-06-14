@@ -49,6 +49,7 @@ namespace GifGenerator.Controllers
 
             using (Stream gifStream = await FbSgHelper.Client.GetGifStreamAsync(gifId))
             {
+                Response.ContentType = "image/gif";
                 await gifStream.CopyToAsync(Response.Body);
             }
         }

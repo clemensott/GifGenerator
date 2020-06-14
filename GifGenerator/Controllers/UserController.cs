@@ -32,9 +32,9 @@ namespace GifGenerator.Controllers
         {
             if (!UserHelper.IsValidUsername(body.Username) || !FbDbHelper.IsValidKey(body.Username))
             {
-                return BadRequest("Username is not valid.");
+                return BadRequest("Username is not valid");
             }
-            if (!UserHelper.IsPasswordValid(body.Password)) return BadRequest("Password is not valid.");
+            if (!UserHelper.IsPasswordValid(body.Password)) return BadRequest("Password is not valid");
 
             bool containsUser = await FbDbHelper.Client.UserQuery(body.Username).ContainsKeyAsync();
 

@@ -42,27 +42,27 @@ If you got this repository first hand (not from Github) then you probably don't 
 ## How to start
 
 #### Run npm install 
-Please go to the project folder  ```webserviceGifGenerator\GifGenerator\ClientApp``` and start following command:
+Please go to the project folder  `webserviceGifGenerator\GifGenerator\ClientApp` and start following command:
 ```
 npm install
 ```
 
 #### Create launch settings 
-Make sure you have the settings file ```webserviceGifGenerator\GifGenerator\Properties\launchSettings.json```.
-If not use ```launchSettings.json.template```
+Make sure you have the settings file `webserviceGifGenerator\GifGenerator\Properties\launchSettings.json`.
+If not use `launchSettings.json.template`
 as template and enter the Firebase credentials.
 
 #### Get ffmpeg
-Download and copy ffmpeg to  ```webserviceGifGenerator\GifGenerator\ffmpeg.exe```.
+Download and copy ffmpeg to  `webserviceGifGenerator\GifGenerator\ffmpeg.exe`.
 It is only needed to create GIFs from videos.
 
 #### Run the API
 
 ##### With IDE
-Open ```webserviceGifGenerator\GifGenerator.sln``` Visual Studio or JetBrains Rider.
+Open `webserviceGifGenerator\GifGenerator.sln` Visual Studio or JetBrains Rider. Click on run.
 
-##### Without IDE
-Go to ```\webserviceGifGenerator\GifGenerator``` and use following command:
+##### With commandline
+Go to `webserviceGifGenerator\GifGenerator` and use following command:
 ```
 dotnet run
 ```
@@ -79,7 +79,7 @@ You can call one of the API endpoint with following post request:
 ```
 http://localhost:52081/api/gif/create
 ```
-with the following body (please make sure that the content type of the request is ```application/json```)
+with the following body (please make sure that the content type of the request is `application/json`)
 ```
 {
     "Sources": [
@@ -98,6 +98,41 @@ with the following body (please make sure that the content type of the request i
 ```
 
 
-**Information about xUnit tests**
+## xUnit tests
+The tests run in serial and call the API which has its own Firebase database and Firebase storage,
+because this database and storage gets setup before every test and cleared after every test. 
 
-Currently there are not a lot of tests. One test will fail and the other one will success. Currently we have a small problem with testing the firebase components. We might create a moq/stub for it in the future.
+### How start
+
+#### Add test profile
+In `webserviceGifGenerator\GifGenerator\Properties\launchSettings.json` needs to be profile called `TestGifGenerator` with the Firebase credentials.  
+
+#### Create env.json
+Make sure you have the env file `webserviceGifGenerator\GifGeneratorTest\env.json`.
+If not use `env.json.template` as template and enter the url and Firebase credentials from the test profile from `launchSettings.json`.
+
+#### Run API
+
+##### With IDE
+Open `webserviceGifGenerator\GifGenerator.sln` Visual Studio or JetBrains Rider.
+Select `Release` configuration, `TestGifGenerator` profile and run it.
+
+##### With commandline
+Go to `webserviceGifGenerator\GifGenerator` and use following command:
+```
+dotnet run --launch-profile TestGifGenerator --configuration Release
+```
+
+#### Run Tests
+
+##### With Visual Studio
+Open `Test-Explorer` in Visual Studio and run all tests
+
+##### With Jetbrains Rider
+Right click on test project and click on `Run Unit Tests`.
+
+##### With commandline
+Go to `webserviceGifGenerator\GifGeneratorTest` and use following command:
+```
+dotnet test
+```

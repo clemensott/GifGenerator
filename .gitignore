@@ -350,3 +350,6 @@ MigrationBackup/
 .ionide/
 /.idea
 /GifGenerator/ffmpeg.exe
+
+# Environment variables
+/GifGeneratorTest/env.json

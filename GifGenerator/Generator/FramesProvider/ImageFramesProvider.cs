@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using GifGenerator.Models;
 using SixLabors.ImageSharp;
 
 namespace GifGenerator.Generator.FramesProvider
@@ -15,7 +17,15 @@ namespace GifGenerator.Generator.FramesProvider
 
         private static IEnumerable<Image> LoadFrames(Stream stream, uint begin, uint count, uint step)
         {
-            Image src = Image.Load(stream);
+            Image src;
+            try
+            {
+                src = Image.Load(stream);
+            }
+            catch (Exception e)
+            {
+                throw new BadRequestException("Data could not be parsed to an image", e);
+            }
 
             if (src.Frames.Count == 1) return new Image[] {src};
 

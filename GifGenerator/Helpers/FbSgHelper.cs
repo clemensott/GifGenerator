@@ -12,7 +12,7 @@ namespace GifGenerator.Helpers
     /// <summary>
     /// Firebase Storage Helper: Provides a FirebaseClient and extension methods to perform commen requests.
     /// </summary>
-    public static class FbSgHelper
+    internal static class FbSgHelper
     {
         private static FirebaseAuthLink authLink;
         private static Task loginTask;
