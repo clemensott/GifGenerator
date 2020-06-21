@@ -1,9 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using GifGenerator.Helpers;
 using GifGenerator.Models;
+using GifGenerator.Models.Gifs;
 using SixLabors.ImageSharp;
 
 namespace GifGenerator.Generator.FramesProvider
@@ -12,26 +16,53 @@ namespace GifGenerator.Generator.FramesProvider
     {
         private static readonly string ffmpegPath = @"ffmpeg.exe";
 
-        public override async Task<IEnumerable<Image>> GetFrames(Stream stream, uint begin, uint count, uint step)
+        public override async Task<Image> GetFrames(Stream stream, GifCreateSource props)
         {
-            // TODO: Make it more efficient
-            uint maxCount = count * step;
+            int frameDelay = 0;
+            string framerateArg = "", beginArg = "", durationArg = "";
+            GifCreateSourceVideoFrameSelection selection = props.VideoFrameSelection;
+
+            if (selection?.FrameRate != null)
+            {
+                framerateArg = $"-r {selection.FrameRate}";
+                frameDelay = (int)(100 / selection.FrameRate);
+            }
+
+            if (selection?.BeginSeconds > 0)
+            {
+                beginArg = $"-ss {selection.BeginSeconds.ToString(CultureInfo.InvariantCulture)}";
+            }
+
+            if (selection?.DurationSeconds != null)
+            {
+                durationArg = $"-t {selection.DurationSeconds.Value.ToString(CultureInfo.InvariantCulture)}";
+            }
+
             Process process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
-                    // RedirectStandardError = true,
+                    RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
-                    Arguments = $"-i pipe:0 -frames:v {maxCount} -q:v 1 -f image2pipe pipe:1",
+                    Arguments = $"-i pipe:0 {framerateArg} {beginArg} {durationArg} -q:v 1 -f image2pipe pipe:1",
                     FileName = ffmpegPath,
                 },
                 EnableRaisingEvents = true
             };
 
-            // process.ErrorDataReceived += (sender, eventArgs) => { Console.WriteLine(eventArgs.Data); };
+            Exception errorDataException = null;
+            process.ErrorDataReceived += (sender, eventArgs) =>
+            {
+                if (eventArgs.Data?.StartsWith("pipe:: Invalid data found when processing input") == true ||
+                    eventArgs.Data?.StartsWith("Cannot determine format of input stream") == true)
+                {
+                    // Does not mean that the file has actually a problem and it is possible that it would work as file input. 
+                    errorDataException = new BadRequestException("Video decoding failed. File could be to big");
+                }
+            };
 
             try
             {
@@ -45,13 +76,27 @@ namespace GifGenerator.Generator.FramesProvider
                 throw new BadRequestException(message);
             }
 
-            // process.BeginErrorReadLine();
+            process.BeginErrorReadLine();
             Task inputTask = WriteData(stream, process.StandardInput.BaseStream);
-            byte[] resultData = await ReadBytes(process.StandardOutput.BaseStream);
+            Image img = await Create(process.StandardOutput.BaseStream);
             await inputTask;
 
-            IEnumerable<Image> frames = GetThumbnails(resultData);
-            return FilterFrames(frames, begin, count, step).ToArray();
+            if (errorDataException != null) throw errorDataException;
+
+            if (img == null)
+            {
+                throw selection == null
+                    ? new BadRequestException("Could not extract any frames from video")
+                    : new BadRequestException(
+                        "Could not extract frames from video. Selected range might be within video duration");
+            }
+
+            foreach (ImageFrame frame in img.Frames)
+            {
+                frame.Metadata.GetGifMetadata().FrameDelay = frameDelay;
+            }
+
+            return img;
         }
 
         private static async Task WriteData(Stream src, Stream dest)
@@ -69,71 +114,55 @@ namespace GifGenerator.Generator.FramesProvider
             src.Close();
         }
 
-        private static async Task<byte[]> ReadBytes(Stream stream)
+        private static async Task<Image> Create(Stream stream)
         {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                await stream.CopyToAsync(ms);
-                return ms.ToArray();
-            }
-        }
+            byte[] bof = new byte[8];
+            int bofLength = 0;
 
-        private static IEnumerable<Image> GetThumbnails(byte[] allImages)
-        {
-            byte[] bof = allImages.Take(8).ToArray(); //??
-            int prevOffset = -1;
-            foreach (var offset in GetBytePatternPositions(allImages, bof))
+            while (bofLength < bof.Length)
             {
-                if (prevOffset > -1)
+                int read = await stream.ReadAsync(bof, bofLength, bof.Length - bofLength);
+                if (read == 0) return null;
+                bofLength += read;
+            }
+
+            Image img = null;
+            ByteReader reader = new ByteReader(stream, 10000);
+
+            while (true)
+            {
+                Queue<byte> queue = new Queue<byte>(bof.Length);
+                for (int i = 0; i < bof.Length; i++)
                 {
-                    yield return GetImageAt(allImages, prevOffset, offset);
+                    byte? b = await reader.ReadAsync();
+                    if (!b.HasValue) return img;
+
+                    queue.Enqueue(b.Value);
                 }
 
-                prevOffset = offset;
-            }
-
-            if (prevOffset > -1)
-            {
-                yield return GetImageAt(allImages, prevOffset, allImages.Length);
-            }
-        }
-
-        private static Image GetImageAt(byte[] data, int start, int end)
-        {
-            using (MemoryStream ms = new MemoryStream(end - start))
-            {
-                ms.Write(data, start, end - start);
-                ms.Seek(0, SeekOrigin.Begin);
-                return Image.Load(ms);
-            }
-        }
-
-        private static IEnumerable<int> GetBytePatternPositions(byte[] data, byte[] pattern)
-        {
-            var dataLen = data.Length;
-            var patternLen = pattern.Length - 1;
-            int scanData = 0;
-            int scanPattern = 0;
-            while (scanData < dataLen)
-            {
-                if (pattern[0] == data[scanData])
+                List<byte> data = new List<byte>(bof);
+                while (!bof.SequenceEqual(queue))
                 {
-                    scanPattern = 1;
-                    scanData++;
-                    while (pattern[scanPattern] == data[scanData])
-                    {
-                        if (scanPattern == patternLen)
-                        {
-                            yield return scanData - patternLen;
-                            break;
-                        }
+                    data.Add(queue.Dequeue());
 
-                        scanPattern++;
-                        scanData++;
-                    }
+                    byte? b = await reader.ReadAsync();
+                    if (!b.HasValue) return img;
+
+                    queue.Enqueue(b.Value);
                 }
 
-                scanData++;
+                try
+                {
+                    Image frame = Image.Load(data.ToArray());
+
+                    if (img == null) img = frame;
+                    else img.Frames.AddFrame(frame.Frames.RootFrame);
+                }
+                catch (Exception e)
+                {
+                    string message = $"Could not parse extracted image: {img?.Frames.Count}";
+                    throw new BadRequestException(message, e);
+                }
             }
         }
     }

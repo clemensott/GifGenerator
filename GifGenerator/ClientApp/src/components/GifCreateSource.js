@@ -21,6 +21,7 @@ export default class GifCreateSource extends Component {
         this.fileReader = new FileReader();
         this.fileReader.onload = this.onFileLoaded;
         this.fileReader.onerror = this.onFileError;
+        this.previewDuration = null;
 
         this.typeRef = React.createRef();
         this.inputConfigs = {
@@ -90,33 +91,81 @@ export default class GifCreateSource extends Component {
                 type: 'number',
                 min: 0,
                 defaultValue: this.props.source.frameDelay,
-                getIsValid: r => parseInt(r, 10) >= 0 ? null : false,
+                getIsValid: r => !!r && parseInt(r, 10) < 0 ? false : null,
                 setValue: r => this.props.source.frameDelay = parseInt(r, 10) || undefined,
             },
-            start: {
+            begin: {
                 ref: React.createRef(),
                 type: 'number',
                 min: 0,
-                defaultValue: this.props.source.start,
+                defaultValue: this.props.source.gifFrameSelection.start,
                 getIsValid: r => parseInt(r, 10) < 0 ? false : null,
-                setValue: r => this.props.source.start = parseInt(r, 10) || undefined,
+                setValue: r => this.props.source.gifFrameSelection.begin = parseInt(r, 10) || undefined,
             },
             count: {
                 ref: React.createRef(),
                 type: 'number',
                 min: 1,
-                defaultValue: this.props.source.count,
+                defaultValue: this.props.source.gifFrameSelection.count,
                 getIsValid: r => !r || parseInt(r, 10) > 0 ? null : false,
-                setValue: r => this.props.source.count = parseInt(r, 10) || undefined,
+                setValue: r => this.props.source.gifFrameSelection.count = parseInt(r, 10) || undefined,
             },
             step: {
                 ref: React.createRef(),
                 type: 'number',
                 min: 1,
-                defaultValue: this.props.source.step,
+                defaultValue: this.props.source.gifFrameSelection.step,
                 getIsValid: r => !r || parseInt(r, 10) > 0 ? null : false,
-                setValue: r => this.props.source.step = parseInt(r, 10) || undefined,
-            }
+                setValue: r => this.props.source.gifFrameSelection.step = parseInt(r, 10) || undefined,
+            },
+            beginSeconds: {
+                ref: React.createRef(),
+                type: 'number',
+                min: 0,
+                step: 0.1,
+                defaultValue: this.props.source.videoFrameSelection.beginSeconds,
+                getIsValid: r => {
+                    const beginSeconds = parseFloat(r);
+                    return beginSeconds && (beginSeconds < 0 || (this.previewDuration && beginSeconds > this.previewDuration)) ? false : null;
+                },
+                setValue: r => {
+                    const beginSeconds = parseFloat(r) || 0;
+                    const endSeconds = parseFloat(this.inputConfigs.endSeconds.ref.current.value) || 0;
+                    this.props.source.videoFrameSelection.beginSeconds = beginSeconds || undefined;
+
+                    this.props.source.videoFrameSelection.durationSeconds =
+                        (endSeconds && Math.round(endSeconds - beginSeconds)) || undefined;
+
+                    this.updateValidation(this.inputConfigs.endSeconds.ref.current, this.inputConfigs.endSeconds.getIsValid)
+                },
+            },
+            endSeconds: {
+                ref: React.createRef(),
+                type: 'number',
+                min: 0,
+                step: 0.1,
+                defaultValue: this.props.source.videoFrameSelection.endSeconds,
+                getIsValid: r => {
+                    if (r === '') return null;
+                    const endSeconds = parseFloat(r);
+                    const beginSeconds = parseFloat(this.inputConfigs.beginSeconds.ref.current.value) || 0;
+                    return (!this.previewDuration || endSeconds <= this.previewDuration) && endSeconds > beginSeconds ? null : false;
+                },
+                setValue: r => {
+                    const endSeconds = parseFloat(r);
+                    const beginSeconds = parseFloat(this.inputConfigs.beginSeconds.ref.current.value) || 0;
+                    this.props.source.videoFrameSelection.durationSeconds =
+                        (endSeconds && Math.round(endSeconds - beginSeconds)) || undefined;
+                },
+            },
+            frameRate: {
+                ref: React.createRef(),
+                type: 'number',
+                min: 1,
+                defaultValue: this.props.source.videoFrameSelection.frameRate,
+                getIsValid: r => !r || parseInt(r, 10) > 0 ? null : false,
+                setValue: r => this.props.source.videoFrameSelection.frameRate = parseInt(r, 10) || undefined,
+            },
         };
         this.state = {
             dataSource: dataSource.url,
@@ -124,6 +173,7 @@ export default class GifCreateSource extends Component {
             file: null,
             isLoadingFile: false,
             fileData: null,
+            previewPosition: null,
             lastValidated: null, // only set to rerender
         };
     }
@@ -131,17 +181,7 @@ export default class GifCreateSource extends Component {
     async setFile(files) {
         this.props.source.dataInvalid = false;
 
-        if (!files.length) {
-            this.fileReader.abort();
-            if (this.state.fileUrl) URL.revokeObjectURL(this.state.fileUrl);
-
-            this.setState({
-                file: null,
-                fileUrl: null,
-                fileData: null,
-                isLoadingFile: false
-            });
-        } else if (this.state.file !== files[0]) {
+        if (files.length && this.state.file !== files[0]) {
             const file = files[0];
 
             this.fileReader.abort();
@@ -212,22 +252,6 @@ export default class GifCreateSource extends Component {
         return `${file.name} (${size})`;
     }
 
-    setValue(inputConfig, value) {
-        inputConfig.setValue(value, inputConfig.ref.current);
-
-        inputConfig.ref.current.value = value;
-        const isValid = inputConfig.getIsValid(value);
-        if (isValid === true) {
-            inputConfig.ref.current.classList.remove('is-invalid');
-            inputConfig.ref.current.classList.add('is-valid');
-        } else if (isValid === false) {
-            inputConfig.ref.current.classList.remove('is-valid');
-            inputConfig.ref.current.classList.add('is-invalid');
-        } else {
-            inputConfig.ref.current.classList.remove('is-valid', 'is-invalid');
-        }
-    }
-
     autoFit() {
         const {x, y, width, height} = cropping.getFitRect(this.state.previewSize.width,
             this.state.previewSize.height, this.props.targetWidth, this.props.targetHeight);
@@ -246,9 +270,58 @@ export default class GifCreateSource extends Component {
         this.setValue(this.inputConfigs.height, height);
     }
 
+    showCropExplanation(objectFit, name) {
+        const src = 'cropping_example.jpg';
+        return swal.show({
+            title: `Example: ${name}`,
+            icon: 'fa-info',
+            content: (
+                <div className="gif-create-crop-explanation-container">
+                    <div className="gif-create-crop-explanation-center">
+                        <div className="gif-create-crop-explanation-without p-1">
+                            <h6>Without:</h6>
+                            <img src={src} alt="error" className="gif-create-crop-explanation-img"
+                                 style={{objectFit: 'fit'}}/>
+                        </div>
+                        <div className="gif-create-crop-explanation-with p-1">
+                            <h6>{name}:</h6>
+                            <img src={src} alt="error" className="gif-create-crop-explanation-img"
+                                 style={{objectFit}}/>
+                        </div>
+                    </div>
+                </div>
+            ),
+            buttons: 'Ok',
+        });
+    }
+
+    setPreview(preview) {
+        this.previewDuration = null;
+        this.setState({
+            preview,
+            previewSize: null,
+            previewPosition: null,
+        });
+    }
+
+    setValue(inputConfig, value) {
+        inputConfig.setValue(value, inputConfig.ref.current);
+        inputConfig.ref.current.value = value;
+
+        this.updateValidation(inputConfig.ref.current, inputConfig.getIsValid);
+    }
+
     onChangeValue(setState, element, setValue, getIsValid) {
         setValue(element.value, element);
 
+        this.updateValidation(element, getIsValid);
+
+        if (setState) {
+            this.setState({lastValidated: element.name});
+        }
+    }
+
+    updateValidation(element, getIsValid) {
         const isValid = getIsValid(element.value);
         if (isValid === true) {
             element.classList.remove('is-invalid');
@@ -259,15 +332,11 @@ export default class GifCreateSource extends Component {
         } else {
             element.classList.remove('is-valid', 'is-invalid');
         }
-
-        if (setState) {
-            this.setState({lastValidated: element.name});
-        }
     }
 
     renderInput({
-                    ref, type, classes = 'form-control', accept, defaultValue, min, disabled,
-                    placeHolder, setStateOnChange, setStateOnBlur, setValue, getIsValid
+                    ref, type, classes = 'form-control', accept, defaultValue, min, step,
+                    disabled, placeHolder, setStateOnChange, setStateOnBlur, setValue, getIsValid
                 }) {
         let validationClass = '';
 
@@ -279,7 +348,7 @@ export default class GifCreateSource extends Component {
 
         return (
             <input ref={ref} type={type} className={`${classes} ${validationClass}`} accept={accept}
-                   defaultValue={defaultValue} placeholder={placeHolder} min={min} disabled={disabled}
+                   defaultValue={defaultValue} placeholder={placeHolder} min={min} step={step} disabled={disabled}
                    onChange={e => this.onChangeValue(setStateOnChange, e.target, setValue, getIsValid)}
                    onBlur={e => this.onChangeValue(setStateOnBlur, e.target, setValue, getIsValid)}/>
         )
@@ -293,8 +362,10 @@ export default class GifCreateSource extends Component {
 
     render() {
         const typeOptions = Object.values(sourceMediaTypes).map(this.renderType);
-        const enableFrames = this.props.source.type === sourceMediaTypes.gif.value ||
-            this.props.source.type === sourceMediaTypes.mp4.value;
+        const isOfTypeGif = this.props.source.type === sourceMediaTypes.gif.value;
+        const isOfTypeVideo = this.props.source.type === sourceMediaTypes.mp4.value;
+
+        console.log(typeof this.state.previewPosition, this.state.previewPosition);
 
         return (
             <div className="form-group">
@@ -350,11 +421,9 @@ export default class GifCreateSource extends Component {
                         {this.renderInput(this.inputConfigs.url)}
                         <div className="input-group-append">
                             <button className="btn btn-secondary" type="button" disabled={!this.props.source.url}
-                                    onClick={() => this.setState({
-                                        preview: {
-                                            type: this.props.source.type,
-                                            url: this.props.source.url,
-                                        }
+                                    onClick={() => this.setPreview({
+                                        type: this.props.source.type,
+                                        url: this.props.source.url,
                                     })}>
                                 Preview
                             </button>
@@ -378,11 +447,9 @@ export default class GifCreateSource extends Component {
                             </button>
                             <button className="btn btn-secondary" type="button"
                                     disabled={!this.state.fileUrl}
-                                    onClick={() => this.setState({
-                                        preview: {
-                                            type: this.props.source.type,
-                                            url: this.state.fileUrl,
-                                        }
+                                    onClick={() => this.setPreview({
+                                        type: this.props.source.type,
+                                        url: this.state.fileUrl,
                                     })}>
                                 Preview
                             </button>
@@ -392,11 +459,9 @@ export default class GifCreateSource extends Component {
                         {this.renderInput(this.inputConfigs.base64)}
                         <div className="input-group-append">
                             <button className="btn btn-secondary" type="button" disabled={!this.props.source.data}
-                                    onClick={() => this.setState({
-                                        preview: {
-                                            type: this.props.source.type,
-                                            base64: this.props.source.data,
-                                        }
+                                    onClick={() => this.setPreview({
+                                        type: this.props.source.type,
+                                        base64: this.props.source.data,
                                     })}>
                                 Preview
                             </button>
@@ -407,8 +472,10 @@ export default class GifCreateSource extends Component {
                 {this.state.preview ?
                     <GifSourcePreview data={this.state.preview}
                                       onSizeLoaded={(width, height) => this.setState({
-                                          previewSize: {width, height,}
-                                      })}/> : null}
+                                          previewSize: width || height ? {width, height,} : null,
+                                      })}
+                                      onPositionChanged={position => this.setState({previewPosition: position})}
+                                      onDurationChanged={duration => this.previewDuration = duration}/> : null}
 
                 <div className="form-group">
                     <div className="custom-control custom-switch"
@@ -459,44 +526,95 @@ export default class GifCreateSource extends Component {
                 </div>
 
                 <div className={`clearfix pb-1 ${this.props.source.cropRect ? '' : 'd-none'}`}>
-                    <button className="btn btn-info ml-2 float-right" type="button"
-                            disabled={!this.props.source.cropRect || !this.state.previewSize || !(this.props.targetWidth > 0) || !(this.props.targetHeight > 0)}
-                            onClick={() => this.autoCrop()}>
-                        Crop
-                    </button>
-                    <button className="btn btn-info ml-2 float-right" type="button"
-                            disabled={!this.props.source.cropRect || !this.state.previewSize || !(this.props.targetWidth > 0) || !(this.props.targetHeight > 0)}
-                            onClick={() => this.autoFit()}>
-                        Fit
-                    </button>
+                    <div className="btn-group float-right" role="group">
+                        <button className="btn btn-info ml-2" type="button"
+                                disabled={!this.props.source.cropRect || !this.state.previewSize || !(this.props.targetWidth > 0) || !(this.props.targetHeight > 0)}
+                                onClick={() => this.autoCrop()}>
+                            Auto crop
+                        </button>
+                        <button type="button" className="btn btn-secondary"
+                                onClick={() => this.showCropExplanation('cover', 'Auto crop')}>
+                            <i className="fas fa-question"/>
+                        </button>
+                    </div>
+                    <div className="btn-group float-right" role="group">
+                        <button className="btn btn-info ml-2" type="button"
+                                disabled={!this.props.source.cropRect || !this.state.previewSize || !(this.props.targetWidth > 0) || !(this.props.targetHeight > 0)}
+                                onClick={() => this.autoFit()}>
+                            Auto fit
+                        </button>
+                        <button type="button" className="btn btn-secondary"
+                                onClick={() => this.showCropExplanation('contain', 'Auto fit')}>
+                            <i className="fas fa-question"/>
+                        </button>
+                    </div>
                 </div>
 
 
                 <div className="form-row">
                     <div className="form-group col-md-3">
-                        <label><strong>Frame delay</strong> (*)</label>
+                        <label title="Time each frame of create GIF is shown in 1/100 of a second">
+                            Frame delay
+                        </label>
                         {this.renderInput(this.inputConfigs.frameDelay)}
                     </div>
-                    <div className="form-group col-md-3">
-                        <label>Start frame</label>
-                        {this.renderInput({
-                            ...this.inputConfigs.start,
-                            disabled: !enableFrames,
-                        })}
+                    <div className={`form-group col-md-3 ${isOfTypeGif ? '' : 'd-none'}`}>
+                        <label title="First frame which is taken">
+                            Begin frame
+                        </label>
+                        {this.renderInput(this.inputConfigs.begin)}
                     </div>
-                    <div className="form-group col-md-3">
-                        <label>Frame count</label>
-                        {this.renderInput({
-                            ...this.inputConfigs.count,
-                            disabled: !enableFrames,
-                        })}
+                    <div className={`form-group col-md-3 ${isOfTypeGif ? '' : 'd-none'}`}>
+                        <label title="Amount of frames taken. Is independent of frame step size">
+                            Frames count
+                        </label>
+                        {this.renderInput(this.inputConfigs.count)}
                     </div>
-                    <div className="form-group col-md-3">
-                        <label>Frame step size</label>
-                        {this.renderInput({
-                            ...this.inputConfigs.step,
-                            disabled: !enableFrames,
-                        })}
+                    <div className={`form-group col-md-3 ${isOfTypeGif ? '' : 'd-none'}`}>
+                        <label title="Size of frame step: Two means that every second frame is taken">
+                            Frame step size
+                        </label>
+                        {this.renderInput(this.inputConfigs.step)}
+                    </div>
+                    <div className={`form-group col-md-3 ${isOfTypeVideo ? '' : 'd-none'}`}>
+                        <label title="Beginning of the extracted part/frames in seconds">
+                            Begin in seconds
+                        </label>
+                        <div className="input-group">
+                            {this.renderInput(this.inputConfigs.beginSeconds)}
+                            <div className="input-group-append">
+                                <button className="btn btn-secondary" type="button"
+                                        disabled={typeof this.state.previewPosition !== 'number'}
+                                        onClick={() => {
+                                            this.setValue(this.inputConfigs.beginSeconds, this.state.previewPosition);
+                                            const endConfig = this.inputConfigs.endSeconds;
+                                            this.updateValidation(endConfig.ref.current, endConfig.getIsValid)
+                                        }}>
+                                    <i className="fas fa-map-pin"/>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div className={`form-group col-md-3 ${isOfTypeVideo ? '' : 'd-none'}`}>
+                        <label title="End of the extracted part/frames in seconds">
+                            End in seconds
+                        </label>
+                        <div className="input-group">
+                            {this.renderInput(this.inputConfigs.endSeconds)}
+                            <div className="input-group-append">
+                                <button className="btn btn-secondary" type="button"
+                                        disabled={typeof this.state.previewPosition !== 'number'}
+                                        onClick={() => this.setValue(this.inputConfigs.endSeconds, this.state.previewPosition)}>
+                                    <i className="fas fa-map-pin"/>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div className={`form-group col-md-3 ${isOfTypeVideo ? '' : 'd-none'}`}>
+                        <label title="Frame rate of the extracted part/frames in frames per seconds">
+                            Frame rate in Hz
+                        </label>
+                        {this.renderInput(this.inputConfigs.frameRate)}
                     </div>
                 </div>
             </div>

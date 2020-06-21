@@ -14,7 +14,7 @@ using GifGenerator.Models;
 
 namespace GifGenerator.Generator
 {
-    public class GifsGenerator
+    public static class GifsGenerator
     {
         public static async Task<Image> Create(GifCreateBody args)
         {
@@ -23,38 +23,41 @@ namespace GifGenerator.Generator
 
             foreach (GifCreateSource src in args.Sources)
             {
-                IEnumerable<Image> images;
+                Image img;
                 using (Stream stream = await GetStream(src, ref client))
                 {
-                    images = await BaseFramesProvider.GetFramesProvider(src.Type)
-                        .GetFrames(stream, src.Begin, src.Count, src.Step);
+                    img = await BaseFramesProvider.GetFramesProvider(src.Type).GetFrames(stream, src);
                 }
 
-                foreach (Image img in images)
+                if (src.CropRect.HasValue)
                 {
-                    if (src.CropRect.HasValue)
+                    int imgWidth = img.Width, imgHeight = img.Height;
+                    img.Mutate(i =>
                     {
-                        Rectangle rect = src.CropRect.Value;
-
-                        img.Mutate(i => i.Resize(new ResizeOptions()
+                        (int x, int y, int width, int height) = src.CropRect.Value;
+                        i.Resize(new ResizeOptions()
                         {
                             Mode = ResizeMode.Manual,
-                            Size = new Size(rect.Width, rect.Height),
-                            TargetRectangle = new Rectangle(-rect.X, -rect.Y, img.Width, img.Height),
-                        }));
-                    }
+                            Size = new Size(width, height),
+                            TargetRectangle = new Rectangle(-x, -y, imgWidth, imgHeight),
+                        });
+                        i.Resize(args.Size);
+                    });
+                }
+                else img.Mutate(i => i.Resize(args.Size));
 
-                    img.Mutate(i => i.Resize(args.Size));
-
-                    GifFrameMetadata frameMeta = img.Frames.RootFrame.Metadata.GetGifMetadata();
+                foreach (ImageFrame frame in img.Frames)
+                {
+                    GifFrameMetadata frameMeta = frame.Metadata.GetGifMetadata();
                     frameMeta.FrameDelay = src.FrameDelay ?? 0;
 
-                    gif.Frames.InsertFrame(gif.Frames.Count - 1, img.Frames.RootFrame);
-
-                    img.Dispose();
+                    gif.Frames.InsertFrame(gif.Frames.Count - 1, frame);
                 }
+
+                img.Dispose();
             }
 
+            gif.Frames.RemoveFrame(gif.Frames.Count - 1);
             client?.Dispose();
             gif.Metadata.GetGifMetadata().RepeatCount = args.RepeatCount;
 

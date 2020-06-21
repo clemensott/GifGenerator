@@ -68,8 +68,17 @@ export default class GifSourcePreview extends Component {
         if (this.props.data.type === 4) {
             return (
                 <video src={src} controls={true} className="gif-source-preview-video"
-                       onCanPlay={e => this.setLoaded(e.target.videoWidth, e.target.videoHeight)}
-                       onError={e => this.setError(e.target.error)}/>
+                       onCanPlay={e => {
+                           this.setLoaded(e.target.videoWidth, e.target.videoHeight);
+                           if (this.props.onPositionChanged) this.props.onPositionChanged(0);
+                       }}
+                       onError={e => this.setError(e.target.error)}
+                       onTimeUpdate={e => {
+                           if (this.props.onPositionChanged) this.props.onPositionChanged(e.target.currentTime);
+                       }}
+                       onDurationChange={e => {
+                           if (this.props.onDurationChanged) this.props.onDurationChanged(e.target.duration);
+                       }}/>
             )
         }
         return (

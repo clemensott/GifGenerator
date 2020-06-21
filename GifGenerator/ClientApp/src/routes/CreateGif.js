@@ -42,22 +42,20 @@ export default class CreateGif extends DataCacheBase {
             type: 0,
             url: null,
             data: null,
-            begin: undefined,
-            count: undefined,
-            step: undefined,
+            gifFrameSelection: {
+                begin: undefined,
+                count: undefined,
+                step: undefined,
+            },
+            videoFrameSelection: {
+                beginSeconds: undefined,
+                durationSeconds: undefined,
+                frameRate: 15,
+            },
             frameDelay: 5,
             cropRect: null,
             dataInvalid: false,
         };
-    }
-
-    validate() {
-        if (this.create.sources.reduce((_, source) => source.dataInvalid = !source.data && !source.url, null)) {
-            this.setState({lastUpdated: 'dataInvalid'});
-            return false;
-        }
-
-        return true;
     }
 
     download() {
@@ -70,6 +68,15 @@ export default class CreateGif extends DataCacheBase {
         a.href = this.state.previewUrl;
         a.download = `${id}.gif`;
         a.click();
+    }
+
+    validate() {
+        if (this.create.sources.reduce((_, source) => source.dataInvalid = !source.data && !source.url, null)) {
+            this.setState({lastUpdated: 'dataInvalid'});
+            return false;
+        }
+
+        return true;
     }
 
     async loadPreview() {
@@ -99,13 +106,13 @@ export default class CreateGif extends DataCacheBase {
 
                 this.setState({previewUrl, isLoading: false});
             } else {
+                const text = await response.text();
                 this.setState({isLoading: false});
                 await swal.show({
-                    title: 'Error',
+                    title: 'Error:',
                     icon: 'fa-times',
                     color: 'danger',
-                    text: `Status code: ${response.status}`,
-                    textSecondary: response.statusText,
+                    text,
                     buttons: 'Ok',
                 });
             }
@@ -265,12 +272,12 @@ export default class CreateGif extends DataCacheBase {
                     <div className="form-row pl-2">
                         <button className={`btn btn-primary float-left mr-2 ${categoryId ? '' : 'd-none'}`}
                                 onClick={() => this.addGif()}>
-                            Add
+                            Create and add GIF
                         </button>
 
                         <button className={`btn float-left mr-2 ${categoryId ? 'btn-secondary' : 'btn-primary'}`}
                                 onClick={() => this.loadPreview()}>
-                            Preview
+                            Create GIF
                         </button>
 
                         <button className={`btn btn-success float-left mr-2 ${this.state.previewUrl ? '' : 'd-none'}`}

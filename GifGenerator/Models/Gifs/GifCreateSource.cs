@@ -25,23 +25,16 @@ namespace GifGenerator.Models.Gifs
         /// Get or sets the HttpRequestMessage which is used to fetch the data. Gets ignored if Url is given.
         /// </summary>
         public CustomSourceRequest CustomRequest { get; set; }
+        
+        /// <summary>
+        /// Get or sets the object which defines the selected frames of the source gif that are used to generated the result gif.
+        /// </summary>
+        public GifCreateSourceGifFrameSelection GifFrameSelection { get; set; }
 
         /// <summary>
-        /// Get or sets the index of the begin frame. Defaults to 0.
+        /// Get or sets the object which defines the extracted part of the source video that are used to generated the result gif.
         /// </summary>
-        public uint Begin { get; set; } = 0;
-
-        /// <summary>
-        /// Get or sets the count of frame that will be taken. Defaults to MaxValue.
-        /// </summary>
-        [Range(1, uint.MaxValue)]
-        public uint Count { get; set; } = uint.MaxValue;
-
-        /// <summary>
-        /// Get or sets the step size, which can be used to skip frames from the data. Defaults to 1.
-        /// </summary>
-        [Range(1, uint.MaxValue)]
-        public uint Step { get; set; } = 1;
+        public GifCreateSourceVideoFrameSelection VideoFrameSelection { get; set; }
 
         /// <summary>
         /// Get or sets the area which will be used of the frames.

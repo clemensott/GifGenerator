@@ -1,27 +1,34 @@
 ﻿using GifGenerator.Models.Gifs;
 using SixLabors.ImageSharp;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace GifGenerator.Generator.FramesProvider
 {
     public abstract class BaseFramesProvider
     {
-        public abstract Task<IEnumerable<Image>> GetFrames(Stream stream, uint begin, uint count, uint step);
+        public abstract Task<Image> GetFrames(Stream stream, GifCreateSource src);
 
-        protected static IEnumerable<Image> FilterFrames(IEnumerable<Image> frames, uint begin, uint count, uint step)
+        protected static Image FilterFrame(Image image, uint begin, uint count, uint step)
         {
-            int index = 0;
-            foreach (Image frame in frames.Skip((int)begin))
+            for (int i = 0; i < begin; i++)
             {
-                if (index % step == 0) yield return frame;
-                if (index >= count * step) break;
-
-                index++;
+                image.Frames.RemoveFrame(0);
             }
+
+            int end = (int)Math.Min(count * step, image.Frames.Count);
+            for (int i = end - 1; i >= 0; i--)
+            {
+                if (i % step != 0) image.Frames.RemoveFrame(i);
+            }
+
+            for (int i = end; i < image.Frames.Count; i++)
+            {
+                image.Frames.RemoveFrame(end);
+            }
+
+            return image;
         }
 
         public static BaseFramesProvider GetFramesProvider(GifSourceType type)
