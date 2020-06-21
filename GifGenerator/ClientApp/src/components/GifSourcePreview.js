@@ -13,6 +13,9 @@ export default class GifSourcePreview extends Component {
             fileData: null,
         };
 
+        this.currentId = 0;     // Used to force react to create a new img/video element.
+                                // Does not mean that image or video gets completely reloaded.  
+        
         this.onFileLoaded = this.onFileLoaded.bind(this);
         this.fileLoading = null;
         this.fileReader = new FileReader();
@@ -67,7 +70,7 @@ export default class GifSourcePreview extends Component {
 
         if (this.props.data.type === 4) {
             return (
-                <video src={src} controls={true} className="gif-source-preview-video"
+                <video key={this.currentId} src={src} controls={true} className="gif-source-preview-video"
                        onCanPlay={e => {
                            this.setLoaded(e.target.videoWidth, e.target.videoHeight);
                            if (this.props.onPositionChanged) this.props.onPositionChanged(0);
@@ -82,7 +85,7 @@ export default class GifSourcePreview extends Component {
             )
         }
         return (
-            <img src={src} alt="Error" className="gif-source-preview-image"
+            <img key={this.currentId} src={src} alt="Error" className="gif-source-preview-image"
                  onLoad={e => this.setLoaded(e.target.naturalWidth, e.target.naturalHeight)}
                  onError={() => this.setError(true)}/>
         )
@@ -90,6 +93,7 @@ export default class GifSourcePreview extends Component {
 
     render() {
         if (this.state.loaded && this.props.data !== this.state.data) {
+            this.currentId++;
             this.state.loaded = false;
             this.state.error = false;
             this.state.fileData = null;
