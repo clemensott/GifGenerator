@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,37 +21,23 @@ namespace GifGenerator.Controllers
     public class GifController : ControllerBase
     {
         [HttpGet("{gifId}")]
-        public async Task GetGif(string gifId)
+        public async Task<ActionResult> GetGif(string gifId)
         {
-            if (!FbDbHelper.IsValidKey(gifId))
-            {
-                Response.StatusCode = 400;
-                return;
-            }
+            if (!FbDbHelper.IsValidKey(gifId)) return BadRequest();
 
             Gif meta = await FbDbHelper.Client.GetGifAsync(gifId);
-            if (meta == null)
-            {
-                Response.StatusCode = 404;
-                return;
-            }
+            if (meta == null) return NotFound();
+
 
             string username = User.GetUsername();
             if (meta.CategoryId != username)
             {
                 bool hasCategory = await FbDbHelper.Client.UserContainsCategoryAsync(username, meta.CategoryId);
-                if (!hasCategory)
-                {
-                    Response.StatusCode = 404;
-                    return;
-                }
+                if (!hasCategory) return NotFound();
             }
 
-            using (Stream gifStream = await FbSgHelper.Client.GetGifStreamAsync(gifId))
-            {
-                Response.ContentType = "image/gif";
-                await gifStream.CopyToAsync(Response.Body);
-            }
+            Stream gifStream = await FbSgHelper.Client.GetGifStreamAsync(gifId);
+            return File(gifStream, "image/gif");
         }
 
         [HttpGet("{gifId}/url")]
