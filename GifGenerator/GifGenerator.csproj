@@ -17,6 +17,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.1.2" PrivateAssets="All" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="2.1.1" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.9" />
+    <PackageReference Include="SixLabors.Fonts" Version="1.0.0-beta0013" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-rc0003" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0009" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,12 +37,6 @@
 
   <ItemGroup>
     <Content Include="Properties\launchSettings.json.template" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="SixLabors.ImageSharp">
-      <HintPath>..\libs\SixLabors.ImageSharp.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">

@@ -54,7 +54,9 @@ export default class CreateGif extends DataCacheBase {
             },
             frameDelay: 5,
             cropRect: null,
-            dataInvalid: false,
+            tag: null,
+            dataInvalid: undefined,
+            tagTextInvalid: undefined,
         };
     }
 
@@ -71,12 +73,22 @@ export default class CreateGif extends DataCacheBase {
     }
 
     validate() {
-        if (this.create.sources.reduce((_, source) => source.dataInvalid = !source.data && !source.url, null)) {
-            this.setState({lastUpdated: 'dataInvalid'});
-            return false;
-        }
+        let valid = true;
+        this.create.sources.forEach(source => {
+            if (!source.data && !source.url) {
+                source.dataInvalid = true;
+                valid = false;
+            }
+            if (source.tag && !source.tag.text) {
+                source.tagTextInvalid = true;
+                valid = false;
+            }
+        });
 
-        return true;
+        if (valid) return true;
+
+        this.setState({lastUpdated: 'dataInvalid'});
+        return false;
     }
 
     async loadPreview() {

@@ -9,9 +9,14 @@ namespace GifGenerator.Generator.FramesProvider
 {
     public class ImageFramesProvider : BaseFramesProvider
     {
-        public override Task<Image> GetFrames(Stream stream, GifCreateSource src)
+        public override async Task<Image> GetFrames(Stream stream, GifCreateSource src)
         {
-            return Task.FromResult(LoadFrames(stream, src));
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await stream.CopyToAsync(ms);
+                ms.Seek(0, SeekOrigin.Begin);
+                return LoadFrames(ms, src);
+            }
         }
 
         private static Image LoadFrames(Stream stream, GifCreateSource props)

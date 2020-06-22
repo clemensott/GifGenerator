@@ -25,7 +25,7 @@ namespace GifGenerator.Models.Gifs
         /// Get or sets the HttpRequestMessage which is used to fetch the data. Gets ignored if Url is given.
         /// </summary>
         public CustomSourceRequest CustomRequest { get; set; }
-        
+
         /// <summary>
         /// Get or sets the object which defines the selected frames of the source gif that are used to generated the result gif.
         /// </summary>
@@ -46,5 +46,10 @@ namespace GifGenerator.Models.Gifs
         /// </summary>
         [Range(0, int.MaxValue)]
         public int? FrameDelay { get; set; }
+
+        /// <summary>
+        /// Get or sets the tag which is text that is added to all frames in this source.
+        /// </summary>
+        public GifCreateTag Tag { get; set; }
     }
 }

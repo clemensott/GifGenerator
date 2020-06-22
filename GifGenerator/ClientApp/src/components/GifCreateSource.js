@@ -1,4 +1,4 @@
-﻿import React, {Component} from 'react';
+import React, {Component} from 'react';
 import GifSourcePreview from "./GifSourcePreview";
 import './GifCreateSource.css'
 import {sourceMediaTypes} from "../constants";
@@ -24,6 +24,8 @@ export default class GifCreateSource extends Component {
         this.previewDuration = null;
 
         this.typeRef = React.createRef();
+        this.tagPositionRef = React.createRef();
+        this.tagSizeRef = React.createRef();
         this.inputConfigs = {
             url: {
                 ref: React.createRef(),
@@ -33,7 +35,7 @@ export default class GifCreateSource extends Component {
                 getIsValid: r => !r && this.props.source.dataInvalid ? false : null,
                 setValue: r => {
                     this.props.source.url = r || undefined;
-                    this.props.source.dataInvalid = false;
+                    this.props.source.dataInvalid = undefined;
                 },
             },
             file: {
@@ -53,13 +55,14 @@ export default class GifCreateSource extends Component {
                 getIsValid: r => !r && this.props.source.dataInvalid ? false : null,
                 setValue: r => {
                     this.props.source.data = r || undefined;
-                    this.props.source.dataInvalid = false;
+                    this.props.source.dataInvalid = undefined;
                 },
             },
             x: {
                 ref: React.createRef(),
                 type: 'number',
                 defaultValue: '0',
+                placeholder: 'Enter horizontal offset',
                 getIsValid: r => Number.isNaN(parseInt(r, 10)) ? false : null,
                 setValue: r => this.props.source.cropRect.x = parseInt(r, 10) || 0,
             },
@@ -67,6 +70,7 @@ export default class GifCreateSource extends Component {
                 ref: React.createRef(),
                 type: 'number',
                 defaultValue: '0',
+                placeholder: 'Enter vertical offset',
                 getIsValid: r => Number.isNaN(parseInt(r, 10)) ? false : null,
                 setValue: r => this.props.source.cropRect.y = parseInt(r, 10) || 0,
             },
@@ -75,6 +79,7 @@ export default class GifCreateSource extends Component {
                 type: 'number',
                 defaultValue: '200',
                 min: '1',
+                placeholder: 'Enter width',
                 getIsValid: r => !r || parseInt(r, 10) > 0 ? null : false,
                 setValue: r => this.props.source.cropRect.width = parseInt(r, 10) || null,
             },
@@ -83,6 +88,7 @@ export default class GifCreateSource extends Component {
                 type: 'number',
                 defaultValue: '200',
                 min: '1',
+                placeholder: 'Enter height',
                 getIsValid: r => !r || parseInt(r, 10) > 0 ? null : false,
                 setValue: r => this.props.source.cropRect.height = parseInt(r, 10) || null,
             },
@@ -90,6 +96,7 @@ export default class GifCreateSource extends Component {
                 ref: React.createRef(),
                 type: 'number',
                 min: 0,
+                placeholder: '0',
                 defaultValue: this.props.source.frameDelay,
                 getIsValid: r => !!r && parseInt(r, 10) < 0 ? false : null,
                 setValue: r => this.props.source.frameDelay = parseInt(r, 10) || undefined,
@@ -98,6 +105,7 @@ export default class GifCreateSource extends Component {
                 ref: React.createRef(),
                 type: 'number',
                 min: 0,
+                placeholder: '0',
                 defaultValue: this.props.source.gifFrameSelection.start,
                 getIsValid: r => parseInt(r, 10) < 0 ? false : null,
                 setValue: r => this.props.source.gifFrameSelection.begin = parseInt(r, 10) || undefined,
@@ -106,6 +114,7 @@ export default class GifCreateSource extends Component {
                 ref: React.createRef(),
                 type: 'number',
                 min: 1,
+                placeholder: 'until end',
                 defaultValue: this.props.source.gifFrameSelection.count,
                 getIsValid: r => !r || parseInt(r, 10) > 0 ? null : false,
                 setValue: r => this.props.source.gifFrameSelection.count = parseInt(r, 10) || undefined,
@@ -114,6 +123,7 @@ export default class GifCreateSource extends Component {
                 ref: React.createRef(),
                 type: 'number',
                 min: 1,
+                placeholder: '1',
                 defaultValue: this.props.source.gifFrameSelection.step,
                 getIsValid: r => !r || parseInt(r, 10) > 0 ? null : false,
                 setValue: r => this.props.source.gifFrameSelection.step = parseInt(r, 10) || undefined,
@@ -123,6 +133,7 @@ export default class GifCreateSource extends Component {
                 type: 'number',
                 min: 0,
                 step: 0.1,
+                placeholder: '0',
                 defaultValue: this.props.source.videoFrameSelection.beginSeconds,
                 getIsValid: r => {
                     const beginSeconds = parseFloat(r);
@@ -144,6 +155,7 @@ export default class GifCreateSource extends Component {
                 type: 'number',
                 min: 0,
                 step: 0.1,
+                placeholder: 'until end',
                 defaultValue: this.props.source.videoFrameSelection.endSeconds,
                 getIsValid: r => {
                     if (r === '') return null;
@@ -162,9 +174,20 @@ export default class GifCreateSource extends Component {
                 ref: React.createRef(),
                 type: 'number',
                 min: 1,
+                placeholder: '15',
                 defaultValue: this.props.source.videoFrameSelection.frameRate,
                 getIsValid: r => !r || parseInt(r, 10) > 0 ? null : false,
                 setValue: r => this.props.source.videoFrameSelection.frameRate = parseInt(r, 10) || undefined,
+            },
+            tagText: {
+                ref: React.createRef(),
+                type: 'text',
+                placeholder: 'Enter text',
+                getIsValid: r => !r && this.props.source.tagTextInvalid ? false : null,
+                setValue: r => {
+                    this.props.source.tag.text = r;
+                    this.props.source.tagTextInvalid = undefined;
+                },
             },
         };
         this.state = {
@@ -336,7 +359,7 @@ export default class GifCreateSource extends Component {
 
     renderInput({
                     ref, type, classes = 'form-control', accept, defaultValue, min, step,
-                    disabled, placeHolder, setStateOnChange, setStateOnBlur, setValue, getIsValid
+                    disabled, placeholder, setStateOnChange, setStateOnBlur, setValue, getIsValid
                 }) {
         let validationClass = '';
 
@@ -348,7 +371,7 @@ export default class GifCreateSource extends Component {
 
         return (
             <input ref={ref} type={type} className={`${classes} ${validationClass}`} accept={accept}
-                   defaultValue={defaultValue} placeholder={placeHolder} min={min} step={step} disabled={disabled}
+                   defaultValue={defaultValue} placeholder={placeholder} min={min} step={step} disabled={disabled}
                    onChange={e => this.onChangeValue(setStateOnChange, e.target, setValue, getIsValid)}
                    onBlur={e => this.onChangeValue(setStateOnBlur, e.target, setValue, getIsValid)}/>
         )
@@ -368,7 +391,7 @@ export default class GifCreateSource extends Component {
         console.log(typeof this.state.previewPosition, this.state.previewPosition);
 
         return (
-            <div className="form-group">
+            <div className="form-group pb-1">
                 <div className="form-group">
                     <label><strong>Type</strong> (*)</label>
                     <select ref={this.typeRef} className="form-control" defaultValue={this.props.source.type}
@@ -615,6 +638,62 @@ export default class GifCreateSource extends Component {
                             Frame rate in Hz
                         </label>
                         {this.renderInput(this.inputConfigs.frameRate)}
+                    </div>
+                </div>
+
+                <div className="form-group">
+                    <div className="custom-control custom-switch"
+                         onClick={() => {
+                             if (this.props.source.tag) {
+                                 this.props.source.tag = null;
+                                 this.setState({enableTag: false});
+                             } else {
+                                 this.props.source.tag = {
+                                     text: this.inputConfigs.tagText.ref.current.value,
+                                     position: parseInt(this.tagPositionRef.current.value),
+                                     maxHeight: parseFloat(this.tagSizeRef.current.value),
+                                 };
+                                 this.setState({enableTag: true});
+                             }
+                         }}>
+                        <input type="checkbox" className="custom-control-input" readOnly
+                               checked={!!this.props.source.tag}/>
+                        <label className="custom-control-label">
+                            With tag
+                        </label>
+                    </div>
+                </div>
+                <div className={`form-row ${this.props.source.tag ? '' : 'd-none'}`}>
+                    <div className="form-group col-md-8">
+                        <label title="Text added to the GIF">
+                            <strong>Text</strong> (*)
+                        </label>
+                        {this.renderInput(this.inputConfigs.tagText)}
+                    </div>
+                    <div className="form-group col-md-2">
+                        <label title="Text added to the GIF">
+                            Position
+                        </label>
+                        <select ref={this.tagPositionRef} className="form-control" defaultValue={2}
+                                onChange={e => {
+                                    this.props.source.tag.position = parseInt(e.target.value, 10);
+                                    this.setState({lastValidated: e.target.name});
+                                }}>
+                            <option value={0}>Top</option>
+                            <option value={1}>Center</option>
+                            <option value={2}>Bottom</option>
+                        </select>
+                    </div>
+                    <div className="form-group col-md-2">
+                        <label title="Text added to the GIF">
+                            Size
+                        </label>
+                        <select ref={this.tagSizeRef} className="form-control" defaultValue={0.2}
+                                onChange={e => this.props.source.tag.maxHeight = parseFloat(e.target.value)}>
+                            <option value={0.1}>Small</option>
+                            <option value={0.2}>Middle</option>
+                            <option value={0.4}>Large</option>
+                        </select>
                     </div>
                 </div>
             </div>
