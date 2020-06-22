@@ -2,7 +2,7 @@
 import CategoryListItem from "./CategoryListItem";
 import './ChildrenList.css'
 
-function groupChildren(src, groupSize = 5) {
+function groupChildren(src, groupSize = 4) {
     const groups = [];
     src.forEach((item, i) => {
         if (i % groupSize === 0) groups.push([item]);
