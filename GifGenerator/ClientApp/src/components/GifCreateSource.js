@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+﻿import React, {Component} from 'react';
 import GifSourcePreview from "./GifSourcePreview";
 import './GifCreateSource.css'
 import {sourceMediaTypes} from "../constants";
@@ -387,8 +387,6 @@ export default class GifCreateSource extends Component {
         const typeOptions = Object.values(sourceMediaTypes).map(this.renderType);
         const isOfTypeGif = this.props.source.type === sourceMediaTypes.gif.value;
         const isOfTypeVideo = this.props.source.type === sourceMediaTypes.mp4.value;
-
-        console.log(typeof this.state.previewPosition, this.state.previewPosition);
 
         return (
             <div className="form-group pb-1">

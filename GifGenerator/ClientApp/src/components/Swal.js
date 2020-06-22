@@ -84,7 +84,7 @@ export class Swal extends Component {
                                 </button>
                             </div>
                             <div className="modal-body">
-                                <p>{swal.text}</p>
+                                <p className={swal.text ? '' : 'd-none'}>{swal.text}</p>
                                 <p className={`text-secondary ${swal.textSecondary ? '' : 'd-none'}`}>
                                     <small>{swal.textSecondary}</small>
                                 </p>

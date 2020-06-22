@@ -18,16 +18,16 @@ export class Navbar extends Component {
     renderCustomIcon(icon) {
         if (icon.href) {
             return (
-                <div key={icon.title} className="nav-icon" title={icon.title}>
+                <div key={icon.title} className="nav-icon-element" title={icon.title}>
                     <Link to={icon.href}>
-                        <i className={`fas ${icon.icon} fa-2x pl-3`}/>
+                        <i className={`fas ${icon.icon} fa-2x pl-3 nav-icon`}/>
                     </Link>
                 </div>
             )
         }
         return (
-            <div key={icon.title} className="nav-click" title={icon.title}>
-                <i className={`fas ${icon.icon} fa-2x pl-3`} onClick={icon.onClick}/>
+            <div key={icon.title} className="nav-icon-element" title={icon.title}>
+                <i className={`fas ${icon.icon} fa-2x pl-3 nav-icon`} onClick={icon.onClick}/>
             </div>
         );
     }
@@ -35,7 +35,7 @@ export class Navbar extends Component {
     renderButtons(btn) {
         if (btn.href) {
             return (
-                <div key={btn.text} className="pl-2 nav-btn">
+                <div key={btn.text} className="pl-2 nav-icon-element nav-btn">
                     <Link to={btn.href}>
                         <button className={`${btn.classes}`}>{btn.text}</button>
                     </Link>

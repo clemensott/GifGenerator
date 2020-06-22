@@ -112,10 +112,14 @@ Make sure you have the env file `webserviceGifGenerator\GifGeneratorTest\env.jso
 If not use `env.json.template` as template and enter the url and Firebase credentials from the test profile from `launchSettings.json`.
 
 #### Run API
-
+Note: this does only start the API part and the website does not work here
+  
 ##### With IDE
 Open `webserviceGifGenerator\GifGenerator.sln` Visual Studio or JetBrains Rider.
 Select `Release` configuration, `TestGifGenerator` profile and run it.
+
+Note: When you run the actual tests in Visual Studio as well, this may not work for some reason. 
+Because of this we recommend commandline for starting the API in this case.
 
 ##### With commandline
 Go to `webserviceGifGenerator\GifGenerator` and use following command:

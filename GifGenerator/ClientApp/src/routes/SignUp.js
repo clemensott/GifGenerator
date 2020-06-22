@@ -8,9 +8,8 @@ export default class SignUp extends RouteBase {
 
         this.state = {
             username: '',
-            passwordDiffer: false,
             isLoggingIn: false,
-            errors: null,
+            error: null,
         };
 
         this.usernameRef = React.createRef();
@@ -23,10 +22,27 @@ export default class SignUp extends RouteBase {
         const password = this.passwordRef.current.value;
         const repeat = this.repeatRef.current.value;
 
+        if(!username){
+            this.setState({
+                error: 'Username is missing',
+            });
+            return;
+        }
+        if(!password){
+            this.setState({
+                error: 'Password is missing',
+            });
+            return;
+        }
+        if(!repeat){
+            this.setState({
+                error: 'Repeated password is missing',
+            });
+            return;
+        }
         if (password !== repeat) {
             this.setState({
-                passwordDiffer: true,
-                error: null,
+                error: 'Passwords do not match',
             });
             return;
         }
@@ -86,7 +102,10 @@ export default class SignUp extends RouteBase {
         }
 
         return (
-            <div className="pt-2">
+            <form className="pt-2" onSubmit={async e => {
+                e.preventDefault();
+                await this.signUp();
+            }}>
                 <div className="form-group">
                     <label>Username:</label>
                     <input ref={this.usernameRef} type="text" defaultValue={this.state.username}
@@ -101,24 +120,16 @@ export default class SignUp extends RouteBase {
                     <label>Repeat password:</label>
                     <input ref={this.repeatRef} type="password" placeholder="Enter password again"
                            className="form-control"/>
-
-                    <p className={`text-danger ${this.state.passwordDiffer ? '' : 'd-none'}`}>
-                        Passwords do not match.
-                    </p>
                 </div>
 
-                <div className={`form-group form-check  ${this.state.error ? '' : 'd-none'}`}>
-                    <label className="form-check-label">
-                        <input className="is-invalid d-none"/>
-                        <div className="invalid-feedback">{this.state.error}</div>
-                    </label>
+                <div className={`alert alert-danger ${this.state.error ? '' : 'd-none'}`}>
+                    {this.state.error}
                 </div>
 
-                <button className="btn bg-primary text-light float-left"
-                        onClick={async () => await this.signUp()}>
+                <button className="btn bg-primary text-light float-left" type="submit">
                     Sign up
                 </button>
-            </div>
+            </form>
         );
     }
 

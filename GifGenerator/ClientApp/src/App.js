@@ -13,6 +13,7 @@ import CreateGif from "./routes/CreateGif";
 import {Navbar} from "./components/Navbar";
 import LoggedOutRoute from "./Routing/LoggedOutRoute";
 import LoggedInRoute from "./Routing/LoggedInRoute";
+import AuthStateRoute from "./Routing/AuthStateRoute";
 
 export const app = {
     data: null,
@@ -79,8 +80,8 @@ export default class App extends Component {
                         <Route path='/gif/create/' component={CreateGif}/>
                         <LoggedInRoute path='/gif/:gifId' component={Gif}/>
                         <LoggedInRoute path='/category/:categoryId' component={Home}/>
-                        <LoggedInRoute exact path='/' component={Home}/>
-                        <Route path='/' render={() => <Redirect to={getCookieValue('auth') ? '/' : '/login'}/>}/>
+                        <AuthStateRoute exact path='/' component={Home} isPrivate={true} redirectTo="/gif/create"/>
+                        <Route path='/' render={() => <Redirect to={getCookieValue('auth') ? '/' : 'gif/create'}/>}/>
                     </Switch>
                     <Swal/>
                 </div>

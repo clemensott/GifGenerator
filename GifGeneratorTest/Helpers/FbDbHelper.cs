@@ -2,7 +2,6 @@
 using Firebase.Database;
 using Firebase.Database.Query;
 using GifGeneratorTest.Models;
-using Newtonsoft.Json;
 
 namespace GifGeneratorTest.Helpers
 {
@@ -31,8 +30,6 @@ namespace GifGeneratorTest.Helpers
 
         public static Task SetDatabase(Database db)
         {
-            string json = JsonConvert.SerializeObject(db);
-            
             return Client.Child("").PutAsync(db);
         }
 
