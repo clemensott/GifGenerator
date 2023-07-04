@@ -59,23 +59,23 @@ namespace GifGenerator.Controllers
         [HttpPost("create")]
         [AllowAnonymous]
         [DisableRequestSizeLimit]
-        public async Task CreateGif([FromBody] GifCreateBody body)
+        public async Task<IActionResult> CreateGif([FromBody] GifCreateBody body)
         {
             try
             {
                 using (Image gif = await GifsGenerator.Create(body))
                 {
-                    Response.ContentType = "image/gif";
-                    gif.SaveAsGif(Response.Body);
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        gif.SaveAsGif(stream);
+                        byte[] data = stream.ToArray();
+                        return File(data, "image/gif");
+                    }
                 }
             }
             catch (BadRequestException e)
             {
-                Response.StatusCode = 400;
-                Response.ContentType = "text/plain";
-
-                byte[] bytes = Encoding.UTF8.GetBytes(e.Message);
-                await Response.Body.WriteAsync(bytes, 0, bytes.Length);
+                return BadRequest(e.Message);
             }
         }
 
