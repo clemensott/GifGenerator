@@ -18,7 +18,8 @@ RUN dotnet publish "GifGenerator.csproj" -p:BuildClientApp=false -c Release -o /
 
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 as runner
 
-RUN apt-get update && apt-get install -y ffmpeg
+RUN sed -i'.bak' 's/$/ contrib/' /etc/apt/sources.list
+RUN apt-get update; apt-get install -y ttf-mscorefonts-installer fontconfig ffmpeg
 WORKDIR /app
 COPY --from=builder /app/publish .
 
