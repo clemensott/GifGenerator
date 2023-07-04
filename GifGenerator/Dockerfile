@@ -18,6 +18,7 @@ RUN dotnet publish "GifGenerator.csproj" -p:BuildClientApp=false -c Release -o /
 
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 as runner
 
+RUN apt-get update && apt-get install -y ffmpeg
 WORKDIR /app
 COPY --from=builder /app/publish .
 
