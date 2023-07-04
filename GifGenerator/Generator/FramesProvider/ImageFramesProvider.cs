@@ -9,13 +9,11 @@ namespace GifGenerator.Generator.FramesProvider
 {
     public class ImageFramesProvider : BaseFramesProvider
     {
-        public override async Task<Image> GetFrames(Stream stream, GifCreateSource src)
+        public override Task<Image> GetFrames(string filePath, GifCreateSource src)
         {
-            using (MemoryStream ms = new MemoryStream())
+            using (FileStream stream = File.OpenRead(filePath))
             {
-                await stream.CopyToAsync(ms);
-                ms.Seek(0, SeekOrigin.Begin);
-                return LoadFrames(ms, src);
+                return Task.FromResult(LoadFrames(stream, src));
             }
         }
 

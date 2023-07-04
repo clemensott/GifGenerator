@@ -10,8 +10,6 @@ using GifGenerator.Models.Gifs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Gif;
 
 namespace GifGenerator.Controllers
 {
@@ -102,7 +100,7 @@ namespace GifGenerator.Controllers
                         Gif meta = new Gif()
                         {
                             CategoryId = categoryId,
-                            PixelSize = gif.Size(),
+                            PixelSize = gif.Size,
                             FileSize = stream.Length
                         };
                         gifId = await FbDbHelper.Client.AddGifAsync(meta);
@@ -125,13 +123,13 @@ namespace GifGenerator.Controllers
         public async Task<ActionResult<GifInfo>> UploadGif(string categoryId, [FromBody] string base64)
         {
             Size? gifSize;
-            byte[] data = Convert.FromBase64String(base64);
+            byte[]? data = Convert.FromBase64String(base64);
 
             try
             {
-                using (Image gif = Image.Load(data, out IImageFormat format))
+                using (Image gif = Image.Load(new ReadOnlySpan<byte>(data)))
                 {
-                    gifSize = format is GifFormat ? (Size?)gif.Size() : null;
+                    gifSize = gif.Size;
                 }
             }
             catch
@@ -148,12 +146,12 @@ namespace GifGenerator.Controllers
                 FileSize = data.Length
             };
             string gifId = await FbDbHelper.Client.AddGifAsync(meta);
-            
+
             using (MemoryStream stream = new MemoryStream(data))
             {
                 await FbSgHelper.Client.PutGifAsync(gifId, stream);
             }
-            
+
             await FbDbHelper.Client.CategoryGifQuery(categoryId, gifId).PutAsync();
 
             return new GifInfo(gifId, meta);

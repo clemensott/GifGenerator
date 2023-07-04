@@ -14,9 +14,9 @@ namespace GifGenerator.Generator.FramesProvider
 {
     public class VideoFramesProvider : BaseFramesProvider
     {
-        private static readonly string ffmpegPath = @"ffmpeg.exe";
+        private static readonly string ffmpegPath = Environment.GetEnvironmentVariable("FFMPEG_PATH") ?? @"ffmpeg.exe";
 
-        public override async Task<Image> GetFrames(Stream stream, GifCreateSource props)
+        public override async Task<Image> GetFrames(string filePath, GifCreateSource props)
         {
             int frameDelay = 0;
             string framerateArg = "", beginArg = "", durationArg = "";
@@ -47,7 +47,7 @@ namespace GifGenerator.Generator.FramesProvider
                     RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
-                    Arguments = $"-i pipe:0 {framerateArg} {beginArg} {durationArg} -q:v 1 -f image2pipe pipe:1",
+                    Arguments = $"-i {filePath} {framerateArg} {beginArg} {durationArg} -q:v 1 -f image2pipe pipe:1",
                     FileName = ffmpegPath,
                 },
                 EnableRaisingEvents = true
@@ -77,9 +77,7 @@ namespace GifGenerator.Generator.FramesProvider
             }
 
             process.BeginErrorReadLine();
-            Task inputTask = WriteData(stream, process.StandardInput.BaseStream);
             Image img = await Create(process.StandardOutput.BaseStream);
-            await inputTask;
 
             if (errorDataException != null) throw errorDataException;
 
@@ -97,21 +95,6 @@ namespace GifGenerator.Generator.FramesProvider
             }
 
             return img;
-        }
-
-        private static async Task WriteData(Stream src, Stream dest)
-        {
-            try
-            {
-                await src.CopyToAsync(dest);
-            }
-            catch
-            {
-                // Throws often an exception but it still works 
-            }
-
-            dest.Close();
-            src.Close();
         }
 
         private static async Task<Image> Create(Stream stream)

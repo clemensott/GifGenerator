@@ -20,7 +20,7 @@ namespace GifGenerator.Generator
     {
         public static async Task<Image> Create(GifCreateBody args)
         {
-            HttpClient client = null;
+            HttpClient client = new HttpClient();
             try
             {
                 Image gif = new Image<Rgba32>(args.Size.Width, args.Size.Height);
@@ -28,9 +28,19 @@ namespace GifGenerator.Generator
                 foreach (GifCreateSource src in args.Sources)
                 {
                     Image img;
-                    using (Stream stream = await GetStream(src, ref client))
+                    string tmpFilePath = null;
+                    try
                     {
-                        img = await BaseFramesProvider.GetFramesProvider(src.Type).GetFrames(stream, src);
+                        tmpFilePath = await SaveTmpFile(src, client);
+                        img = await BaseFramesProvider.GetFramesProvider(src.Type).GetFrames(tmpFilePath, src);
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            if (tmpFilePath != null) File.Delete(tmpFilePath);
+                        }
+                        catch { }
                     }
 
                     if (src.CropRect.HasValue)
@@ -78,8 +88,13 @@ namespace GifGenerator.Generator
             }
         }
 
-        private static Task<Stream> GetStream(GifCreateSource src, ref HttpClient client)
+        private static async Task<string> SaveTmpFile(GifCreateSource src, HttpClient client)
         {
+            const string tmpFilePath = "tmp";
+            if (!Directory.Exists(tmpFilePath)) Directory.CreateDirectory(tmpFilePath);
+
+            string path = Path.Combine(tmpFilePath, Guid.NewGuid().ToString());
+
             if (!string.IsNullOrWhiteSpace(src.Data))
             {
                 byte[] data;
@@ -92,13 +107,17 @@ namespace GifGenerator.Generator
                     throw new BadRequestException("Data is not in base64 format", e);
                 }
 
-                Stream stream = new MemoryStream(data);
-                return Task.FromResult(stream);
+                File.WriteAllBytes(path, data);
             }
-
-            if (client == null) client = new HttpClient();
-
-            return RunRequest(client, src);
+            else
+            {
+                Stream readStream = await RunRequest(client, src);
+                using (FileStream writeStream = File.OpenWrite(path))
+                {
+                    await readStream.CopyToAsync(writeStream);
+                }
+            }
+            return path;
         }
 
         private static async Task<Stream> RunRequest(HttpClient client, GifCreateSource src)
@@ -142,7 +161,7 @@ namespace GifGenerator.Generator
             Font font = FitTextOnImage(tag.Text, textWidth,
                 (imgHeight - 2 * marginHeight) * tag.MaxHeight);
             Pen p = Pens.Solid(Color.Black, font.Size / 20);
-            PointF location = new PointF(marginWidth, 0);
+            PointF location = new PointF(imgWidth / 2, 0);
 
             switch (tag.Position)
             {
@@ -159,31 +178,31 @@ namespace GifGenerator.Generator
                     throw new BadRequestException("Tag position type is unknown");
             }
 
-            context.DrawText(new TextGraphicsOptions()
+            context.DrawText(new TextOptions(font)
             {
-                TextOptions = new TextOptions()
-                {
-                    VerticalAlignment = tag.Position,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    WrapTextWidth = textWidth,
-                }
-            }, tag.Text, font, Brushes.Solid(Color.White), p, location);
+                VerticalAlignment = tag.Position,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                WrappingLength = textWidth,
+                Origin = location,
+                TextAlignment = TextAlignment.Center,
+            }, tag.Text, Brushes.Solid(Color.White), p);
         }
 
         private static Font FitTextOnImage(string text, float imgWidth, float maxHeight)
         {
-            FontFamily ff = SystemFonts.Find("Arial");
+            FontFamily ff = SystemFonts.Get("Arial");
             float factor = 1;
 
             while (true)
             {
                 Font f = new Font(ff, maxHeight * factor, FontStyle.Bold);
-                float height = TextMeasurer.Measure(text, new RendererOptions(f)
+                FontRectangle rect = TextMeasurer.Measure(text, new TextOptions(f)
                 {
-                    WrappingWidth = imgWidth,
-                }).Height;
+                    WrappingLength = imgWidth,
+                    TextAlignment = TextAlignment.Center,
+                });
 
-                if (height < maxHeight || height <= 1) return f;
+                if (rect.Height < maxHeight || rect.Height <= 1) return f;
 
                 factor *= 0.95f;
             }

@@ -1,14 +1,13 @@
 ﻿using GifGenerator.Models.Gifs;
 using SixLabors.ImageSharp;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace GifGenerator.Generator.FramesProvider
 {
     public abstract class BaseFramesProvider
     {
-        public abstract Task<Image> GetFrames(Stream stream, GifCreateSource src);
+        public abstract Task<Image> GetFrames(string filePath, GifCreateSource src);
 
         protected static Image FilterFrame(Image image, uint begin, uint count, uint step)
         {
