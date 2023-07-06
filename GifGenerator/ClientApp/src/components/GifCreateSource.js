@@ -1,10 +1,11 @@
-﻿import React, {Component} from 'react';
+﻿import React, { Component } from 'react';
 import GifSourcePreview from "./GifSourcePreview";
-import './GifCreateSource.css'
-import {sourceMediaTypes} from "../constants";
+import FormLabel from './FormLabel';
+import { sourceMediaTypes } from "../constants";
 import cropping from "../helper/cropping";
-import {swal} from "./Swal";
+import { swal } from "./Swal";
 import getBase64FromDataUrl from "../helper/getBase64FromDataUrl";
+import './GifCreateSource.css';
 
 const dataSource = {
     url: 'URL',
@@ -251,7 +252,7 @@ export default class GifCreateSource extends Component {
 
                 if (result.type === 'primary') {
                     this.props.source.type = this.typeRef.current.value = fileSourceType.value;
-                    this.setState({lastValidated: 'type'});
+                    this.setState({ lastValidated: 'type' });
                 }
             }
         }
@@ -261,11 +262,11 @@ export default class GifCreateSource extends Component {
         const data = getBase64FromDataUrl(e.target.result);
 
         if (this.state.dataSource === dataSource.file) this.props.source.data = data;
-        this.setState({fileData: data, isLoadingFile: false});
+        this.setState({ fileData: data, isLoadingFile: false });
     }
 
     onFileError() {
-        this.setState({fileData: null, isLoadingFile: false});
+        this.setState({ fileData: null, isLoadingFile: false });
     }
 
     formatFile(file) {
@@ -276,7 +277,7 @@ export default class GifCreateSource extends Component {
     }
 
     autoFit() {
-        const {x, y, width, height} = cropping.getFitRect(this.state.previewSize.width,
+        const { x, y, width, height } = cropping.getFitRect(this.state.previewSize.width,
             this.state.previewSize.height, this.props.targetWidth, this.props.targetHeight);
         this.setValue(this.inputConfigs.x, x);
         this.setValue(this.inputConfigs.y, y);
@@ -285,7 +286,7 @@ export default class GifCreateSource extends Component {
     }
 
     autoCrop() {
-        const {x, y, width, height} = cropping.getCropRect(this.state.previewSize.width,
+        const { x, y, width, height } = cropping.getCropRect(this.state.previewSize.width,
             this.state.previewSize.height, this.props.targetWidth, this.props.targetHeight);
         this.setValue(this.inputConfigs.x, x);
         this.setValue(this.inputConfigs.y, y);
@@ -304,12 +305,12 @@ export default class GifCreateSource extends Component {
                         <div className="gif-create-crop-explanation-without p-1">
                             <h6>Without:</h6>
                             <img src={src} alt="error" className="gif-create-crop-explanation-img"
-                                 style={{objectFit: 'fit'}}/>
+                                style={{ objectFit: 'fit' }} />
                         </div>
                         <div className="gif-create-crop-explanation-with p-1">
                             <h6>{name}:</h6>
                             <img src={src} alt="error" className="gif-create-crop-explanation-img"
-                                 style={{objectFit}}/>
+                                style={{ objectFit }} />
                         </div>
                     </div>
                 </div>
@@ -340,7 +341,7 @@ export default class GifCreateSource extends Component {
         this.updateValidation(element, getIsValid);
 
         if (setState) {
-            this.setState({lastValidated: element.name});
+            this.setState({ lastValidated: element.name });
         }
     }
 
@@ -358,9 +359,9 @@ export default class GifCreateSource extends Component {
     }
 
     renderInput({
-                    ref, type, classes = 'form-control', accept, defaultValue, min, step,
-                    disabled, placeholder, setStateOnChange, setStateOnBlur, setValue, getIsValid
-                }) {
+        ref, type, classes = 'form-control', accept, defaultValue, min, step,
+        disabled, placeholder, setStateOnChange, setStateOnBlur, setValue, getIsValid
+    }) {
         let validationClass = '';
 
         if (ref.current) {
@@ -371,9 +372,9 @@ export default class GifCreateSource extends Component {
 
         return (
             <input ref={ref} type={type} className={`${classes} ${validationClass}`} accept={accept}
-                   defaultValue={defaultValue} placeholder={placeholder} min={min} step={step} disabled={disabled}
-                   onChange={e => this.onChangeValue(setStateOnChange, e.target, setValue, getIsValid)}
-                   onBlur={e => this.onChangeValue(setStateOnBlur, e.target, setValue, getIsValid)}/>
+                defaultValue={defaultValue} placeholder={placeholder} min={min} step={step} disabled={disabled}
+                onChange={e => this.onChangeValue(setStateOnChange, e.target, setValue, getIsValid)}
+                onBlur={e => this.onChangeValue(setStateOnBlur, e.target, setValue, getIsValid)} />
         )
     }
 
@@ -391,50 +392,50 @@ export default class GifCreateSource extends Component {
         return (
             <div className="form-group pb-1">
                 <div className="form-group">
-                    <label><strong>Type</strong> (*)</label>
+                    <FormLabel text="Type" mandetory={true} />
                     <select ref={this.typeRef} className="form-control" defaultValue={this.props.source.type}
-                            name="type"
-                            onChange={e => {
-                                this.props.source.type = parseInt(e.target.value, 10);
-                                this.setState({lastValidated: e.target.name});
-                            }}>
+                        name="type"
+                        onChange={e => {
+                            this.props.source.type = parseInt(e.target.value, 10);
+                            this.setState({ lastValidated: e.target.name });
+                        }}>
                         {typeOptions}
                     </select>
                 </div>
 
                 <div className="form-group">
-                    <label><strong>Data source</strong> (*)</label>
+                    <FormLabel text="Data source" mandetory={true} />
                     <div className="pb-2">
                         <div className="custom-control custom-radio custom-control-inline"
-                             onClick={() => {
-                                 this.props.source.url = this.inputConfigs.url.ref.current.value;
-                                 this.props.source.data = null;
-                                 this.setState({dataSource: dataSource.url});
-                             }}>
+                            onClick={() => {
+                                this.props.source.url = this.inputConfigs.url.ref.current.value;
+                                this.props.source.data = null;
+                                this.setState({ dataSource: dataSource.url });
+                            }}>
                             <input type="radio" className="custom-control-input" readOnly
-                                   checked={this.state.dataSource === dataSource.url}/>
+                                checked={this.state.dataSource === dataSource.url} />
                             <label className="custom-control-label">Url</label>
                         </div>
 
                         <div className="custom-control custom-radio custom-control-inline"
-                             onClick={() => {
-                                 this.props.source.url = null;
-                                 this.props.source.data = this.state.fileData || null;
-                                 this.setState({dataSource: dataSource.file});
-                             }}>
+                            onClick={() => {
+                                this.props.source.url = null;
+                                this.props.source.data = this.state.fileData || null;
+                                this.setState({ dataSource: dataSource.file });
+                            }}>
                             <input type="radio" className="custom-control-input" readOnly
-                                   checked={this.state.dataSource === dataSource.file}/>
+                                checked={this.state.dataSource === dataSource.file} />
                             <label className="custom-control-label">File</label>
                         </div>
 
                         <div className="custom-control custom-radio custom-control-inline"
-                             onClick={() => {
-                                 this.props.source.url = null;
-                                 this.props.source.data = this.inputConfigs.base64.ref.current.value;
-                                 this.setState({dataSource: dataSource.base64});
-                             }}>
+                            onClick={() => {
+                                this.props.source.url = null;
+                                this.props.source.data = this.inputConfigs.base64.ref.current.value;
+                                this.setState({ dataSource: dataSource.base64 });
+                            }}>
                             <input type="radio" className="custom-control-input" readOnly
-                                   checked={this.state.dataSource === dataSource.base64}/>
+                                checked={this.state.dataSource === dataSource.base64} />
                             <label className="custom-control-label">Base64</label>
                         </div>
                     </div>
@@ -442,10 +443,10 @@ export default class GifCreateSource extends Component {
                         {this.renderInput(this.inputConfigs.url)}
                         <div className="input-group-append">
                             <button className="btn btn-secondary" type="button" disabled={!this.props.source.url}
-                                    onClick={() => this.setPreview({
-                                        type: this.props.source.type,
-                                        url: this.props.source.url,
-                                    })}>
+                                onClick={() => this.setPreview({
+                                    type: this.props.source.type,
+                                    url: this.props.source.url,
+                                })}>
                                 Preview
                             </button>
                         </div>
@@ -459,19 +460,19 @@ export default class GifCreateSource extends Component {
                         </div>
                         <div className="input-group-append">
                             <button className="btn btn-secondary" type="button"
-                                    disabled={!this.state.file || this.state.isLoadingFile}
-                                    onClick={() => {
-                                        this.fileReader.readAsDataURL(this.state.file);
-                                        this.setState({fileData: null, isLoadingFile: true});
-                                    }}>
+                                disabled={!this.state.file || this.state.isLoadingFile}
+                                onClick={() => {
+                                    this.fileReader.readAsDataURL(this.state.file);
+                                    this.setState({ fileData: null, isLoadingFile: true });
+                                }}>
                                 Reupload
                             </button>
                             <button className="btn btn-secondary" type="button"
-                                    disabled={!this.state.fileUrl}
-                                    onClick={() => this.setPreview({
-                                        type: this.props.source.type,
-                                        url: this.state.fileUrl,
-                                    })}>
+                                disabled={!this.state.fileUrl}
+                                onClick={() => this.setPreview({
+                                    type: this.props.source.type,
+                                    url: this.state.fileUrl,
+                                })}>
                                 Preview
                             </button>
                         </div>
@@ -480,10 +481,10 @@ export default class GifCreateSource extends Component {
                         {this.renderInput(this.inputConfigs.base64)}
                         <div className="input-group-append">
                             <button className="btn btn-secondary" type="button" disabled={!this.props.source.data}
-                                    onClick={() => this.setPreview({
-                                        type: this.props.source.type,
-                                        base64: this.props.source.data,
-                                    })}>
+                                onClick={() => this.setPreview({
+                                    type: this.props.source.type,
+                                    base64: this.props.source.data,
+                                })}>
                                 Preview
                             </button>
                         </div>
@@ -492,30 +493,30 @@ export default class GifCreateSource extends Component {
 
                 {this.state.preview ?
                     <GifSourcePreview data={this.state.preview}
-                                      onSizeLoaded={(width, height) => this.setState({
-                                          previewSize: width || height ? {width, height,} : null,
-                                      })}
-                                      onPositionChanged={position => this.setState({previewPosition: position})}
-                                      onDurationChanged={duration => this.previewDuration = duration}/> : null}
+                        onSizeLoaded={(width, height) => this.setState({
+                            previewSize: width || height ? { width, height, } : null,
+                        })}
+                        onPositionChanged={position => this.setState({ previewPosition: position })}
+                        onDurationChanged={duration => this.previewDuration = duration} /> : null}
 
                 <div className="form-group">
                     <div className="custom-control custom-switch"
-                         onClick={() => {
-                             if (this.props.source.cropRect) {
-                                 this.props.source.cropRect = null;
-                                 this.setState({enableCrop: false});
-                             } else {
-                                 this.props.source.cropRect = {
-                                     x: parseInt(this.inputConfigs.x.ref.current.value, 10),
-                                     y: parseInt(this.inputConfigs.y.ref.current.value, 10),
-                                     width: parseInt(this.inputConfigs.width.ref.current.value, 10),
-                                     height: parseInt(this.inputConfigs.height.ref.current.value, 10),
-                                 };
-                                 this.setState({enableCrop: false});
-                             }
-                         }}>
+                        onClick={() => {
+                            if (this.props.source.cropRect) {
+                                this.props.source.cropRect = null;
+                                this.setState({ enableCrop: false });
+                            } else {
+                                this.props.source.cropRect = {
+                                    x: parseInt(this.inputConfigs.x.ref.current.value, 10),
+                                    y: parseInt(this.inputConfigs.y.ref.current.value, 10),
+                                    width: parseInt(this.inputConfigs.width.ref.current.value, 10),
+                                    height: parseInt(this.inputConfigs.height.ref.current.value, 10),
+                                };
+                                this.setState({ enableCrop: false });
+                            }
+                        }}>
                         <input type="checkbox" className="custom-control-input" readOnly
-                               checked={!!this.props.source.cropRect}/>
+                            checked={!!this.props.source.cropRect} />
                         <label className="custom-control-label">
                             Crop source
                         </label>
@@ -528,20 +529,20 @@ export default class GifCreateSource extends Component {
                     </div>
                 </div>
                 <div className={`form-row ${this.props.source.cropRect ? '' : 'd-none'}`}>
-                    <div className="form-group col-md-3">
-                        <label><strong>X</strong> (*)</label>
+                    <div className="form-group col-6 col-md-3">
+                        <FormLabel text="X" mandetory={true} />
                         {this.renderInput(this.inputConfigs.x)}
                     </div>
-                    <div className="form-group col-md-3">
-                        <label><strong>Y</strong> (*)</label>
+                    <div className="form-group col-6 col-md-3">
+                        <FormLabel text="Y" mandetory={true} />
                         {this.renderInput(this.inputConfigs.y)}
                     </div>
-                    <div className="form-group col-md-3">
-                        <label> <strong>Width </strong> (*)</label>
+                    <div className="form-group col-6 col-md-3">
+                        <FormLabel text="Width" mandetory={true} />
                         {this.renderInput(this.inputConfigs.width)}
                     </div>
-                    <div className="form-group col-md-3">
-                        <label> <strong>Height</strong> (*)</label>
+                    <div className="form-group col-6 col-md-3">
+                        <FormLabel text="Height" mandetory={true} />
                         {this.renderInput(this.inputConfigs.height)}
                     </div>
                 </div>
@@ -549,113 +550,99 @@ export default class GifCreateSource extends Component {
                 <div className={`clearfix pb-1 ${this.props.source.cropRect ? '' : 'd-none'}`}>
                     <div className="btn-group float-right" role="group">
                         <button className="btn btn-info ml-2" type="button"
-                                disabled={!this.props.source.cropRect || !this.state.previewSize || !(this.props.targetWidth > 0) || !(this.props.targetHeight > 0)}
-                                onClick={() => this.autoCrop()}>
+                            disabled={!this.props.source.cropRect || !this.state.previewSize || !(this.props.targetWidth > 0) || !(this.props.targetHeight > 0)}
+                            onClick={() => this.autoCrop()}>
                             Auto crop
                         </button>
                         <button type="button" className="btn btn-secondary"
-                                onClick={() => this.showCropExplanation('cover', 'Auto crop')}>
-                            <i className="fas fa-question"/>
+                            onClick={() => this.showCropExplanation('cover', 'Auto crop')}>
+                            <i className="fas fa-question" />
                         </button>
                     </div>
                     <div className="btn-group float-right" role="group">
                         <button className="btn btn-info ml-2" type="button"
-                                disabled={!this.props.source.cropRect || !this.state.previewSize || !(this.props.targetWidth > 0) || !(this.props.targetHeight > 0)}
-                                onClick={() => this.autoFit()}>
+                            disabled={!this.props.source.cropRect || !this.state.previewSize || !(this.props.targetWidth > 0) || !(this.props.targetHeight > 0)}
+                            onClick={() => this.autoFit()}>
                             Auto fit
                         </button>
                         <button type="button" className="btn btn-secondary"
-                                onClick={() => this.showCropExplanation('contain', 'Auto fit')}>
-                            <i className="fas fa-question"/>
+                            onClick={() => this.showCropExplanation('contain', 'Auto fit')}>
+                            <i className="fas fa-question" />
                         </button>
                     </div>
                 </div>
 
 
                 <div className="form-row">
-                    <div className="form-group col-md-3">
-                        <label title="Time each frame of create GIF is shown in 1/100 of a second">
-                            Frame delay
-                        </label>
+                    <div className="form-group col-6 col-md-3">
+                        <FormLabel text="Frame delay" title="Time each frame of create GIF is shown in 1/100 of a second" />
                         {this.renderInput(this.inputConfigs.frameDelay)}
                     </div>
-                    <div className={`form-group col-md-3 ${isOfTypeGif ? '' : 'd-none'}`}>
-                        <label title="First frame which is taken">
-                            Begin frame
-                        </label>
-                        {this.renderInput(this.inputConfigs.begin)}
-                    </div>
-                    <div className={`form-group col-md-3 ${isOfTypeGif ? '' : 'd-none'}`}>
-                        <label title="Amount of frames taken. Is independent of frame step size">
-                            Frames count
-                        </label>
-                        {this.renderInput(this.inputConfigs.count)}
-                    </div>
-                    <div className={`form-group col-md-3 ${isOfTypeGif ? '' : 'd-none'}`}>
-                        <label title="Size of frame step: Two means that every second frame is taken">
-                            Frame step size
-                        </label>
+                    <div className={`form-group col-6 col-md-3 ${isOfTypeGif ? '' : 'd-none'}`}>
+                        <FormLabel text="Frame step size" title="Size of frame step: Two means that every second frame is taken" />
                         {this.renderInput(this.inputConfigs.step)}
                     </div>
-                    <div className={`form-group col-md-3 ${isOfTypeVideo ? '' : 'd-none'}`}>
-                        <label title="Beginning of the extracted part/frames in seconds">
-                            Begin in seconds
-                        </label>
+                    <div className={`form-group col-6 col-md-3 ${isOfTypeGif ? '' : 'd-none'}`}>
+                        <FormLabel text="Begin frame" title="First frame which is taken" />
+                        {this.renderInput(this.inputConfigs.begin)}
+                    </div>
+                    <div className={`form-group col-6 col-md-3 ${isOfTypeGif ? '' : 'd-none'}`}>
+                        <FormLabel text="Frames count" title="Amount of frames taken. Is independent of frame step size" />
+                        {this.renderInput(this.inputConfigs.count)}
+                    </div>
+                    <div className={`form-group col-6 col-md-3 ${isOfTypeVideo ? '' : 'd-none'}`}>
+                        <FormLabel text="Frame rate in Hz" title="Frame rate of the extracted part/frames in frames per seconds" />
+                        {this.renderInput(this.inputConfigs.frameRate)}
+                    </div>
+                    <div className={`form-group col-6 col-md-3 ${isOfTypeVideo ? '' : 'd-none'}`}>
+                        <FormLabel text="Begin in seconds" title="Beginning of the extracted part/frames in seconds" />
                         <div className="input-group">
                             {this.renderInput(this.inputConfigs.beginSeconds)}
                             <div className="input-group-append">
                                 <button className="btn btn-secondary" type="button"
-                                        disabled={typeof this.state.previewPosition !== 'number'}
-                                        onClick={() => {
-                                            this.setValue(this.inputConfigs.beginSeconds, this.state.previewPosition);
-                                            const endConfig = this.inputConfigs.endSeconds;
-                                            this.updateValidation(endConfig.ref.current, endConfig.getIsValid)
-                                        }}>
-                                    <i className="fas fa-map-pin"/>
+                                    disabled={typeof this.state.previewPosition !== 'number'}
+                                    onClick={() => {
+                                        this.setValue(this.inputConfigs.beginSeconds, this.state.previewPosition);
+                                        const endConfig = this.inputConfigs.endSeconds;
+                                        this.updateValidation(endConfig.ref.current, endConfig.getIsValid)
+                                    }}>
+                                    <i className="fas fa-map-pin" />
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div className={`form-group col-md-3 ${isOfTypeVideo ? '' : 'd-none'}`}>
-                        <label title="End of the extracted part/frames in seconds">
-                            End in seconds
-                        </label>
+                    <div className={`form-group col-6 col-md-3 ${isOfTypeVideo ? '' : 'd-none'}`}>
+                        <FormLabel text="End in seconds" title="End of the extracted part/frames in seconds" />
                         <div className="input-group">
                             {this.renderInput(this.inputConfigs.endSeconds)}
                             <div className="input-group-append">
                                 <button className="btn btn-secondary" type="button"
-                                        disabled={typeof this.state.previewPosition !== 'number'}
-                                        onClick={() => this.setValue(this.inputConfigs.endSeconds, this.state.previewPosition)}>
-                                    <i className="fas fa-map-pin"/>
+                                    disabled={typeof this.state.previewPosition !== 'number'}
+                                    onClick={() => this.setValue(this.inputConfigs.endSeconds, this.state.previewPosition)}>
+                                    <i className="fas fa-map-pin" />
                                 </button>
                             </div>
                         </div>
-                    </div>
-                    <div className={`form-group col-md-3 ${isOfTypeVideo ? '' : 'd-none'}`}>
-                        <label title="Frame rate of the extracted part/frames in frames per seconds">
-                            Frame rate in Hz
-                        </label>
-                        {this.renderInput(this.inputConfigs.frameRate)}
                     </div>
                 </div>
 
                 <div className="form-group">
                     <div className="custom-control custom-switch"
-                         onClick={() => {
-                             if (this.props.source.tag) {
-                                 this.props.source.tag = null;
-                                 this.setState({enableTag: false});
-                             } else {
-                                 this.props.source.tag = {
-                                     text: this.inputConfigs.tagText.ref.current.value,
-                                     position: parseInt(this.tagPositionRef.current.value),
-                                     maxHeight: parseFloat(this.tagSizeRef.current.value),
-                                 };
-                                 this.setState({enableTag: true});
-                             }
-                         }}>
+                        onClick={() => {
+                            if (this.props.source.tag) {
+                                this.props.source.tag = null;
+                                this.setState({ enableTag: false });
+                            } else {
+                                this.props.source.tag = {
+                                    text: this.inputConfigs.tagText.ref.current.value,
+                                    position: parseInt(this.tagPositionRef.current.value),
+                                    maxHeight: parseFloat(this.tagSizeRef.current.value),
+                                };
+                                this.setState({ enableTag: true });
+                            }
+                        }}>
                         <input type="checkbox" className="custom-control-input" readOnly
-                               checked={!!this.props.source.tag}/>
+                            checked={!!this.props.source.tag} />
                         <label className="custom-control-label">
                             With tag
                         </label>
@@ -663,31 +650,25 @@ export default class GifCreateSource extends Component {
                 </div>
                 <div className={`form-row ${this.props.source.tag ? '' : 'd-none'}`}>
                     <div className="form-group col-md-8">
-                        <label title="Text added to the GIF">
-                            <strong>Text</strong> (*)
-                        </label>
+                        <FormLabel text="Text" mandetory={true} title="Text added to the GIF" />
                         {this.renderInput(this.inputConfigs.tagText)}
                     </div>
-                    <div className="form-group col-md-2">
-                        <label title="Text added to the GIF">
-                            Position
-                        </label>
+                    <div className="form-group col-6 col-md-2">
+                        <FormLabel text="Position" mandetory={false} title="Position of added text" />
                         <select ref={this.tagPositionRef} className="form-control" defaultValue={2}
-                                onChange={e => {
-                                    this.props.source.tag.position = parseInt(e.target.value, 10);
-                                    this.setState({lastValidated: e.target.name});
-                                }}>
+                            onChange={e => {
+                                this.props.source.tag.position = parseInt(e.target.value, 10);
+                                this.setState({ lastValidated: e.target.name });
+                            }}>
                             <option value={0}>Top</option>
                             <option value={1}>Center</option>
                             <option value={2}>Bottom</option>
                         </select>
                     </div>
-                    <div className="form-group col-md-2">
-                        <label title="Text added to the GIF">
-                            Size
-                        </label>
+                    <div className="form-group col-6 col-md-2">
+                        <FormLabel text="Size" mandetory={false} title="Size of added text" />
                         <select ref={this.tagSizeRef} className="form-control" defaultValue={0.2}
-                                onChange={e => this.props.source.tag.maxHeight = parseFloat(e.target.value)}>
+                            onChange={e => this.props.source.tag.maxHeight = parseFloat(e.target.value)}>
                             <option value={0.1}>Small</option>
                             <option value={0.2}>Middle</option>
                             <option value={0.4}>Large</option>

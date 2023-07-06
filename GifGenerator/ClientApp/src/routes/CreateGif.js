@@ -232,7 +232,7 @@ export default class CreateGif extends DataCacheBase {
             <div className="pt-3 pb-3">
                 <div className={this.state.isLoading ? 'd-none' : ''}>
                     <div className="form-row">
-                        <div className="form-group col-md-4">
+                        <div className="form-group col-4">
                             <label><strong>Width</strong> (*)</label>
                             <input type="number" className="form-control"
                                    defaultValue={this.create.size.width} min="1" max="3000"
@@ -241,7 +241,7 @@ export default class CreateGif extends DataCacheBase {
                                        this.setState({lastUpdated: 'width'});
                                    }}/>
                         </div>
-                        <div className="form-group col-md-4">
+                        <div className="form-group col-4">
                             <label><strong>Height</strong> (*)</label>
                             <input type="number" className="form-control" defaultValue={this.create.size.height}
                                    min="1" max="3000" onBlur={e => {
@@ -249,7 +249,7 @@ export default class CreateGif extends DataCacheBase {
                                 this.setState({lastUpdated: 'height'});
                             }}/>
                         </div>
-                        <div className="form-group col-md-4">
+                        <div className="form-group col-4">
                             <label>Repeat count</label>
                             <input type="text" className="form-control" min="1"
                                    defaultValue={this.create.repeatCount || ''}
